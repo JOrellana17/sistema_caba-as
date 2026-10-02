@@ -1,0 +1,93 @@
+<?php
+
+use App\Http\Controllers\AuditoriaController;
+use App\Http\Controllers\AutenticacionController;
+use App\Http\Controllers\CabanaController;
+use App\Http\Controllers\DisponibilidadController;
+use App\Http\Controllers\HuespedController;
+use App\Http\Controllers\PermisoController;
+use App\Http\Controllers\ReservacionController;
+use App\Http\Controllers\RolController;
+use App\Http\Controllers\UsuarioController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return view('welcome');
+})->name('portada');
+
+Route::middleware('guest')->group(function () {
+    Route::get('/iniciar-sesion', [AutenticacionController::class, 'mostrar'])->name('sesion.mostrar');
+    Route::post('/iniciar-sesion', [AutenticacionController::class, 'iniciar'])->name('sesion.iniciar');
+});
+
+Route::middleware(['auth', 'usuario.activo', 'auth.session'])->group(function () {
+    Route::get('/reservaciones/disponibilidad', [DisponibilidadController::class, 'consultar'])->middleware('can:reservaciones.ver_disponibilidad')->name('reservaciones.disponibilidad');
+    Route::get('/reservaciones', [ReservacionController::class, 'listar'])->middleware('can:reservaciones.ver')->name('reservaciones.listar');
+    Route::get('/reservaciones/crear', [ReservacionController::class, 'crear'])->middleware('can:reservaciones.crear')->name('reservaciones.crear');
+    Route::post('/reservaciones', [ReservacionController::class, 'guardar'])->middleware('can:reservaciones.crear')->name('reservaciones.guardar');
+    Route::get('/reservaciones/{reservacion}/editar', [ReservacionController::class, 'editar'])->middleware('can:reservaciones.editar')->name('reservaciones.editar');
+    Route::put('/reservaciones/{reservacion}', [ReservacionController::class, 'actualizar'])->middleware('can:reservaciones.editar')->name('reservaciones.actualizar');
+    Route::put('/reservaciones/{reservacion}/pendiente', [ReservacionController::class, 'pendiente'])->middleware('can:reservaciones.editar')->name('reservaciones.pendiente');
+    Route::put('/reservaciones/{reservacion}/confirmar', [ReservacionController::class, 'confirmar'])->middleware('can:reservaciones.confirmar')->name('reservaciones.confirmar');
+    Route::put('/reservaciones/{reservacion}/entrada', [ReservacionController::class, 'entrada'])->middleware('can:reservaciones.registrar_entrada')->name('reservaciones.entrada');
+    Route::put('/reservaciones/{reservacion}/salida', [ReservacionController::class, 'salida'])->middleware('can:reservaciones.registrar_salida')->name('reservaciones.salida');
+    Route::put('/reservaciones/{reservacion}/cancelar', [ReservacionController::class, 'cancelar'])->middleware('can:reservaciones.cancelar')->name('reservaciones.cancelar');
+    Route::put('/reservaciones/{reservacion}/no-presentado', [ReservacionController::class, 'noPresentado'])->middleware('can:reservaciones.marcar_no_presentado')->name('reservaciones.no_presentado');
+    Route::put('/reservaciones/{reservacion}/horarios', [ReservacionController::class, 'horarios'])->middleware('can:reservaciones.editar')->name('reservaciones.horarios');
+    Route::delete('/reservaciones/{reservacion}', [ReservacionController::class, 'eliminar'])->middleware('can:reservaciones.eliminar')->name('reservaciones.eliminar');
+    Route::get('/reservaciones/{reservacion}', [ReservacionController::class, 'ver'])->middleware('can:reservaciones.ver')->name('reservaciones.ver');
+    Route::get('/cabanas/disponibilidad', [DisponibilidadController::class, 'consultar'])->middleware('can:cabanas.ver_disponibilidad')->name('cabanas.disponibilidad');
+    Route::get('/huespedes', [HuespedController::class, 'listar'])->middleware('can:huespedes.ver')->name('huespedes.listar');
+    Route::get('/huespedes/buscar', [HuespedController::class, 'buscar'])->middleware(['can:huespedes.buscar', 'throttle:120,1'])->name('huespedes.buscar');
+    Route::get('/huespedes/buscador', [HuespedController::class, 'buscador'])->middleware('can:huespedes.buscar')->name('huespedes.buscador');
+    Route::get('/huespedes/crear', [HuespedController::class, 'crear'])->middleware('can:huespedes.crear')->name('huespedes.crear');
+    Route::post('/huespedes/alta-en-formulario', [HuespedController::class, 'guardarDesdeFormulario'])->middleware(['can:huespedes.crear', 'can:huespedes.buscar'])->name('huespedes.guardar_desde_formulario');
+    Route::post('/huespedes', [HuespedController::class, 'guardar'])->middleware('can:huespedes.crear')->name('huespedes.guardar');
+    Route::get('/huespedes/{huesped}/editar', [HuespedController::class, 'editar'])->middleware('can:huespedes.editar')->name('huespedes.editar');
+    Route::put('/huespedes/{huesped}', [HuespedController::class, 'actualizar'])->middleware('can:huespedes.editar')->name('huespedes.actualizar');
+    Route::put('/huespedes/{huesped}/estado', [HuespedController::class, 'estado'])->middleware('can:huespedes.cambiar_estado')->name('huespedes.estado');
+    Route::put('/huespedes/{huesped}/lista-negra', [HuespedController::class, 'listaNegra'])->middleware('can:huespedes.cambiar_lista_negra')->name('huespedes.lista_negra');
+    Route::put('/huespedes/{huesped}/frecuente', [HuespedController::class, 'frecuente'])->middleware('can:huespedes.marcar_frecuente')->name('huespedes.frecuente');
+    Route::delete('/huespedes/{huesped}', [HuespedController::class, 'eliminar'])->middleware('can:huespedes.eliminar')->name('huespedes.eliminar');
+    Route::post('/huespedes/{huesped}/restaurar', [HuespedController::class, 'restaurar'])->withTrashed()->middleware('can:huespedes.restaurar')->name('huespedes.restaurar');
+    Route::get('/huespedes/{huesped}', [HuespedController::class, 'ver'])->middleware('can:huespedes.ver')->name('huespedes.ver');
+    Route::get('/cabanas', [CabanaController::class, 'listar'])->middleware('can:cabanas.ver')->name('cabanas.listar');
+    Route::get('/cabanas/crear', [CabanaController::class, 'crear'])->middleware('can:cabanas.crear')->name('cabanas.crear');
+    Route::post('/cabanas', [CabanaController::class, 'guardar'])->middleware('can:cabanas.crear')->name('cabanas.guardar');
+    Route::get('/cabanas/{cabana}/editar', [CabanaController::class, 'editar'])->middleware('can:cabanas.editar')->name('cabanas.editar');
+    Route::put('/cabanas/{cabana}', [CabanaController::class, 'actualizar'])->middleware('can:cabanas.editar')->name('cabanas.actualizar');
+    Route::put('/cabanas/{cabana}/estado', [CabanaController::class, 'estado'])->middleware('can:cabanas.cambiar_estado')->name('cabanas.estado');
+    Route::delete('/cabanas/{cabana}', [CabanaController::class, 'eliminar'])->middleware('can:cabanas.eliminar')->name('cabanas.eliminar');
+    Route::post('/cabanas/{cabana}/restaurar', [CabanaController::class, 'restaurar'])->withTrashed()->middleware('can:cabanas.restaurar')->name('cabanas.restaurar');
+    Route::get('/cabanas/{cabana}/imagen', [CabanaController::class, 'imagen'])->middleware('can:cabanas.ver')->name('cabanas.imagen');
+    Route::get('/cabanas/{cabana}', [CabanaController::class, 'ver'])->middleware('can:cabanas.ver')->name('cabanas.ver');
+    Route::get('/usuarios', [UsuarioController::class, 'listar'])->middleware('can:usuarios.ver')->name('usuarios.listar');
+    Route::get('/usuarios/crear', [UsuarioController::class, 'crear'])->middleware('can:usuarios.crear')->name('usuarios.crear');
+    Route::post('/usuarios', [UsuarioController::class, 'guardar'])->middleware('can:usuarios.crear')->name('usuarios.guardar');
+    Route::get('/usuarios/{usuario}/editar', [UsuarioController::class, 'editar'])->middleware('can:usuarios.editar')->name('usuarios.editar');
+    Route::put('/usuarios/{usuario}', [UsuarioController::class, 'actualizar'])->middleware('can:usuarios.editar')->name('usuarios.actualizar');
+    Route::delete('/usuarios/{usuario}', [UsuarioController::class, 'eliminar'])->middleware('can:usuarios.eliminar')->name('usuarios.eliminar');
+    Route::get('/usuarios/{usuario}', [UsuarioController::class, 'ver'])->middleware('can:usuarios.ver')->name('usuarios.ver');
+    Route::get('/roles', [RolController::class, 'listar'])->middleware('can:roles.ver')->name('roles.listar');
+    Route::get('/roles/crear', [RolController::class, 'crear'])->middleware('can:roles.crear')->name('roles.crear');
+    Route::post('/roles', [RolController::class, 'guardar'])->middleware('can:roles.crear')->name('roles.guardar');
+    Route::get('/roles/{rol}/editar', [RolController::class, 'editar'])->middleware('can:roles.editar')->name('roles.editar');
+    Route::put('/roles/{rol}', [RolController::class, 'actualizar'])->middleware('can:roles.editar')->name('roles.actualizar');
+    Route::delete('/roles/{rol}', [RolController::class, 'eliminar'])->middleware('can:roles.eliminar')->name('roles.eliminar');
+    Route::get('/roles/{rol}', [RolController::class, 'ver'])->middleware('can:roles.ver')->name('roles.ver');
+    Route::get('/permisos', [PermisoController::class, 'listar'])->middleware('can:permisos.ver')->name('permisos.listar');
+    Route::get('/permisos/crear', [PermisoController::class, 'crear'])->middleware('can:permisos.crear')->name('permisos.crear');
+    Route::post('/permisos', [PermisoController::class, 'guardar'])->middleware('can:permisos.crear')->name('permisos.guardar');
+    Route::get('/permisos/{permiso}/editar', [PermisoController::class, 'editar'])->middleware('can:permisos.editar')->name('permisos.editar');
+    Route::put('/permisos/{permiso}', [PermisoController::class, 'actualizar'])->middleware('can:permisos.editar')->name('permisos.actualizar');
+    Route::delete('/permisos/{permiso}', [PermisoController::class, 'eliminar'])->middleware('can:permisos.eliminar')->name('permisos.eliminar');
+    Route::put('/usuarios/{usuario}/estado', [UsuarioController::class, 'estado'])->middleware('can:usuarios.cambiar_estado')->name('usuarios.estado');
+    Route::put('/usuarios/{usuario}/contrasena', [UsuarioController::class, 'contrasena'])->middleware('can:usuarios.restablecer_contrasena')->name('usuarios.contrasena');
+    Route::put('/usuarios/{usuario}/roles', [UsuarioController::class, 'roles'])->middleware('can:usuarios.gestionar_roles')->name('usuarios.roles');
+    Route::put('/usuarios/{usuario}/permisos', [UsuarioController::class, 'permisos'])->middleware('can:usuarios.gestionar_permisos')->name('usuarios.permisos');
+    Route::put('/roles/{rol}/permisos', [RolController::class, 'permisos'])->middleware('can:roles.gestionar_permisos')->name('roles.permisos');
+    Route::get('/auditoria', [AuditoriaController::class, 'listar'])->middleware('can:auditoria.ver')->name('auditoria.listar');
+    Route::get('/auditoria/{registro}', [AuditoriaController::class, 'ver'])->middleware('can:auditoria.ver')->name('auditoria.ver');
+    Route::view('/inicio', 'inicio')->name('inicio');
+    Route::post('/cerrar-sesion', [AutenticacionController::class, 'cerrar'])->name('sesion.cerrar');
+});

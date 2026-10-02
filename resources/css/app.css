@@ -1,0 +1,63 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+:root {
+    --bs-body-font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --bs-body-bg: #f3f6f5;
+    --bs-body-color: #233b35;
+}
+
+.acceso-contenedor {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.marca {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 1rem;
+    background: #174f44;
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.marca-pequena {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1rem;
+    background: #fff;
+    color: #174f44;
+}
+
+.cabecera { background: #174f44; }
+
+.btn-primary {
+    --bs-btn-bg: #17634f;
+    --bs-btn-border-color: #17634f;
+    --bs-btn-hover-bg: #124c3d;
+    --bs-btn-hover-border-color: #124c3d;
+    --bs-btn-active-bg: #124c3d;
+    --bs-btn-active-border-color: #124c3d;
+}
+
+.form-check-input:checked {
+    background-color: #17634f;
+    border-color: #17634f;
+}
+
+:focus-visible {
+    outline: 3px solid #a76813;
+    outline-offset: 3px;
+}
+
+.salto-contenido:focus {
+    position: absolute;
+    z-index: 1100;
+    background: white;
+    padding: 1rem;
+}
