@@ -24,7 +24,7 @@
 </form>
 <div class="card table-responsive">
 <table class="table align-middle mb-0">
-    <caption class="px-3">Por confirmar y pendiente no bloquean la cabaña.</caption>
+    <caption class="px-3">Pendiente no bloquea la cabaña.</caption>
     <thead><tr><th scope="col">Cabaña</th><th scope="col">Entrada / salida</th><th scope="col">Huéspedes</th><th scope="col">Estado</th><th scope="col">Alojamiento</th><th scope="col">Acciones</th></tr></thead>
     <tbody>
     @forelse ($reservaciones as $reservacion)

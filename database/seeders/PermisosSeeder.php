@@ -26,6 +26,14 @@ class PermisosSeeder extends Seeder
             }
 
             $administrador->permisos()->syncWithoutDetaching(Permiso::pluck('id'));
+
+            $empleado = Rol::firstOrCreate(['codigo' => 'empleado'], [
+                'nombre' => 'Empleado',
+                'descripcion' => 'Operación de huéspedes y reservaciones, sin administración ni finanzas.',
+            ]);
+            if ($empleado->wasRecentlyCreated) {
+                $empleado->permisos()->sync(Permiso::whereIn('codigo', config('roles.empleado'))->pluck('id'));
+            }
         });
     }
 }

@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias(['usuario.activo' => VerificarUsuarioActivo::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->dontFlash(['contrasena', 'contrasena_confirmation']);
+        $exceptions->dontFlash(['contrasena', 'contrasena_confirmation', 'url', 'token']);
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );

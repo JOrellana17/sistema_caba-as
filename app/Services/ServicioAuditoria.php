@@ -26,6 +26,9 @@ class ServicioAuditoria
         if ($modulo === 'huespedes') {
             $campos = ['activo', 'vip', 'frecuente', 'lista_negra', 'deleted_at', 'campos_modificados'];
         }
+        if ($modulo === 'calendario') {
+            $campos = ['cabana_id', 'fuente_id', 'reservacion_id', 'origen', 'inicio', 'fin', 'bloquea', 'estado', 'activa', 'activo', 'conflicto', 'discrepancia', 'procesados', 'retirados'];
+        }
         RegistroAuditoria::create([
             'usuario_id' => $solicitud->user()?->id,
             'modulo' => $modulo,

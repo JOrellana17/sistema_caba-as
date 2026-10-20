@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['cabana_id', 'huesped_id', 'fecha_entrada', 'fecha_salida', 'cantidad_huespedes', 'notas'])]
@@ -17,7 +18,6 @@ class Reservacion extends Model
     protected $table = 'reservaciones';
 
     public const ESTADOS = [
-        'por_confirmar' => 'Por confirmar',
         'pendiente' => 'Pendiente',
         'confirmada' => 'Confirmada',
         'hospedada' => 'Hospedada',
@@ -27,6 +27,8 @@ class Reservacion extends Model
     ];
 
     public const ESTADOS_QUE_BLOQUEAN = ['confirmada', 'hospedada'];
+
+    public const ESTADOS_ACTIVOS = ['pendiente', 'confirmada', 'hospedada'];
 
     public function cabana(): BelongsTo
     {
@@ -41,6 +43,11 @@ class Reservacion extends Model
     public function creador(): BelongsTo
     {
         return $this->belongsTo(Usuario::class, 'creado_por')->withTrashed();
+    }
+
+    public function eventoCalendario(): HasOne
+    {
+        return $this->hasOne(EventoCalendario::class, 'reservacion_id');
     }
 
     protected function casts(): array

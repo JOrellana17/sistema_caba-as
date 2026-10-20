@@ -14,4 +14,5 @@ return [
     'permisos' => ['ver', 'crear', 'editar', 'eliminar'],
     'configuracion' => ['ver', 'editar', 'exportar', 'importar', 'limpiar_cache'],
     'auditoria' => ['ver'],
+    'calendario' => ['administrar_fuentes', 'sincronizar', 'importar', 'exportar', 'gestionar_enlaces', 'gestionar_bloqueos', 'vincular'],
 ];

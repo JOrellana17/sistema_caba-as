@@ -12,6 +12,8 @@ class GuardarCabanaRequest extends SolicitudAdministrativa
         $editando = $this->route('cabana') !== null;
 
         return [
+            'bloqueo_inicio' => ['nullable', Rule::requiredIf(fn () => is_string($this->input('estado')) && $this->input('estado') !== 'disponible'), 'date_format:Y-m-d\TH:i', 'required_with:bloqueo_fin'],
+            'bloqueo_fin' => ['nullable', Rule::requiredIf(fn () => is_string($this->input('estado')) && $this->input('estado') !== 'disponible'), 'date_format:Y-m-d\TH:i', 'required_with:bloqueo_inicio', 'after:bloqueo_inicio'],
             'nombre' => ['required', 'string', 'max:120'],
             'descripcion' => ['nullable', 'string', 'max:5000'],
             'capacidad_base' => ['required', 'integer', 'min:1', 'max:65535'],
@@ -53,6 +55,8 @@ class GuardarCabanaRequest extends SolicitudAdministrativa
     public function attributes(): array
     {
         return [
+            'bloqueo_inicio' => 'inicio del bloqueo',
+            'bloqueo_fin' => 'fin del bloqueo',
             'capacidad_base' => 'capacidad base',
             'capacidad_maxima' => 'capacidad máxima',
             'precio_base' => 'precio base',

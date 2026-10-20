@@ -4,6 +4,10 @@
 <h1 class="h3 mb-4">{{ $reservacion->exists ? 'Reagendar reservación' : 'Nueva reservación' }}</h1>
 <form method="POST" action="{{ $reservacion->exists ? route('reservaciones.actualizar', $reservacion) : route('reservaciones.guardar') }}" class="card card-body">
     @csrf
+    @if (! $reservacion->exists && request('evento_id', old('evento_id')))
+        <input type="hidden" name="evento_id" value="{{ request('evento_id', old('evento_id')) }}">
+        <p class="alert alert-info">Completa la reservación del evento externo. Su bloqueo conserva el origen y las fechas; guardar no lo libera.</p>
+    @endif
     @if ($reservacion->exists) @method('PUT') @endif
     <x-buscador-huesped :seleccion="$seleccion" :alta-en-formulario="true" />
     <div class="mb-3">
@@ -46,14 +50,7 @@
             </select>
         </div>
     @else
-        <div class="mb-3">
-            <label for="estado_inicial" class="form-label">Estado inicial</label>
-            <select class="form-select" id="estado_inicial" name="estado_inicial" required>
-                <option value="por_confirmar" @selected(old('estado_inicial', 'por_confirmar') === 'por_confirmar')>Por confirmar</option>
-                <option value="pendiente" @selected(old('estado_inicial') === 'pendiente')>Pendiente</option>
-            </select>
-            <p class="form-text">Estos estados avisan de una solicitud y no bloquean disponibilidad. La confirmación vuelve a comprobar la cabaña y bloquea la estancia.</p>
-        </div>
+        <p class="alert alert-info">La reservación se guardará como <strong>Pendiente</strong> y no bloqueará disponibilidad. Al confirmarla se comprobará de nuevo la cabaña y se bloqueará la estancia.</p>
     @endif
     <div class="mb-3">
         <label for="notas" class="form-label">Notas internas</label>

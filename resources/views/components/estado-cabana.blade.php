@@ -22,3 +22,9 @@
         @error('activa')<div id="error-activa" class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
 </div>
+
+<div class="row">
+    <div class="col-md-6"><x-campo nombre="bloqueo_inicio" etiqueta="Inicio del bloqueo (obligatorio si no está disponible)" tipo="datetime-local" /></div>
+    <div class="col-md-6"><x-campo nombre="bloqueo_fin" etiqueta="Fin del bloqueo (exclusivo)" tipo="datetime-local" /></div>
+</div>
+<p class="form-text">Los estados ocupada, reservada, mantenimiento y bloqueada requieren un período para el calendario. Cambiar a disponible no elimina bloqueos externos ni los períodos manuales ya registrados; estos últimos se liberan desde Calendario.</p>

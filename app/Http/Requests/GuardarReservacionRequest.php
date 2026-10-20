@@ -11,6 +11,7 @@ class GuardarReservacionRequest extends SolicitudAdministrativa
         $editando = $this->route('reservacion') !== null;
 
         return [
+            'evento_id' => $editando ? ['prohibited'] : ['nullable', 'integer', 'exists:eventos_calendario,id'],
             'cabana_id' => ['required', 'integer', Rule::exists('cabanas', 'id')->whereNull('deleted_at')],
             'huesped_id' => ['required', 'integer', Rule::exists('huespedes', 'id')->whereNull('deleted_at')],
             'fecha_entrada' => ['required', 'date_format:Y-m-d'],
@@ -20,7 +21,7 @@ class GuardarReservacionRequest extends SolicitudAdministrativa
             'cantidad_huespedes' => ['required', 'integer', 'min:1', 'max:65535'],
             'moneda' => ['required', Rule::in(['HNL', 'USD'])],
             'tarifa' => $editando ? ['required', Rule::in(['conservar', 'actualizar'])] : ['prohibited'],
-            'estado_inicial' => $editando ? ['prohibited'] : ['required', Rule::in(['por_confirmar', 'pendiente'])],
+            'estado_inicial' => $editando ? ['prohibited'] : ['sometimes', 'required', Rule::in(['pendiente'])],
             'notas' => ['nullable', 'string', 'max:5000'],
             ...array_fill_keys([
                 'estado', 'codigo', 'creado_por', 'cancelado_por', 'fecha_confirmacion', 'fecha_entrada_registrada',

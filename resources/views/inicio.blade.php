@@ -2,23 +2,35 @@
 @section('titulo', 'Inicio')
 @section('contenido')
 <h1 class="h2 mb-2">Inicio</h1>
-<p class="text-body-secondary mb-4">Bienvenido, {{ auth()->user()->nombre }}. Selecciona el módulo al que deseas acceder.</p>
-<div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-    <x-acceso-modulo titulo="Cabañas" descripcion="Consulta las cabañas, sus capacidades, tarifas y estados." ruta="cabanas.listar" permiso="cabanas.ver" />
-    <x-acceso-modulo titulo="Reservaciones" descripcion="Consulta, reagenda y gestiona las estancias." ruta="reservaciones.listar" permiso="reservaciones.ver" />
+<p class="text-body-secondary mb-4">Bienvenido, {{ auth()->user()->nombre }}.</p>
+@can('reservaciones.crear')
     @can('huespedes.buscar')
-        <x-acceso-modulo titulo="Nueva reservación" descripcion="Busca o registra al huésped y prepara su reservación." ruta="reservaciones.crear" permiso="reservaciones.crear" />
+        <a class="btn btn-primary mb-4" href="{{ route('reservaciones.crear') }}">Nueva reservación</a>
     @endcan
-    @can('reservaciones.ver_disponibilidad')
-        <x-acceso-modulo titulo="Disponibilidad" descripcion="Comprueba las cabañas disponibles para las fechas de la estancia." ruta="reservaciones.disponibilidad" permiso="reservaciones.ver_disponibilidad" />
-    @elsecan('cabanas.ver_disponibilidad')
-        <x-acceso-modulo titulo="Disponibilidad" descripcion="Comprueba las cabañas disponibles para las fechas de la estancia." ruta="cabanas.disponibilidad" permiso="cabanas.ver_disponibilidad" />
-    @endcan
-    <x-acceso-modulo titulo="Huéspedes" descripcion="Consulta y actualiza las fichas de tus huéspedes." ruta="huespedes.listar" permiso="huespedes.ver" />
-    <x-acceso-modulo titulo="Buscar cliente" descripcion="Encuentra un huésped por nombre, teléfono o identidad." ruta="huespedes.buscador" permiso="huespedes.buscar" />
-    <x-acceso-modulo titulo="Usuarios" descripcion="Administra las cuentas del personal." ruta="usuarios.listar" permiso="usuarios.ver" />
-    <x-acceso-modulo titulo="Roles" descripcion="Gestiona los roles y sus permisos." ruta="roles.listar" permiso="roles.ver" />
-    <x-acceso-modulo titulo="Permisos" descripcion="Consulta y administra los permisos del sistema." ruta="permisos.listar" permiso="permisos.ver" />
-    <x-acceso-modulo titulo="Auditoría" descripcion="Revisa el historial de operaciones registradas." ruta="auditoria.listar" permiso="auditoria.ver" />
-</div>
+@endcan
+@can('reservaciones.ver')
+<section aria-labelledby="titulo-reservaciones">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-2">
+        <h2 id="titulo-reservaciones" class="h3 mb-0">Reservaciones activas</h2>
+        <a class="btn btn-outline-primary" href="{{ route('reservaciones.listar') }}">Ver todas las reservaciones</a>
+    </div>
+    <p class="text-body-secondary mb-4">Pendientes, confirmadas y hospedadas con entrada desde hoy, ordenadas por fecha. Hora de Honduras.</p>
+    @forelse ($grupos as $fecha => $registros)
+        <section class="mb-4" aria-labelledby="fecha-{{ $loop->index }}">
+            <h3 id="fecha-{{ $loop->index }}" class="h5 mb-3">{{ $registros->first()->fecha_entrada->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY') }}</h3>
+            <ul class="list-group">
+                @foreach ($registros as $reservacion)
+                    <x-fila-reservacion :reservacion="$reservacion" />
+                @endforeach
+            </ul>
+        </section>
+    @empty
+        <p class="text-body-secondary py-3">No hay reservaciones activas con entrada desde hoy.</p>
+    @endforelse
+    @if ($reservaciones->hasPages())
+        <p class="small text-body-secondary">Un día puede continuar en la página siguiente.</p>
+        {{ $reservaciones->links() }}
+    @endif
+</section>
+@endcan
 @endsection

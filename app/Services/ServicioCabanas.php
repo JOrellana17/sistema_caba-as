@@ -15,7 +15,7 @@ use Throwable;
 
 class ServicioCabanas
 {
-    public function __construct(private ServicioAuditoria $auditoria, private ServicioBloqueoCabanas $bloqueo) {}
+    public function __construct(private ServicioAuditoria $auditoria, private ServicioBloqueoCabanas $bloqueo, private ServicioGestionCalendario $calendario) {}
 
     public function guardar(Request $solicitud, array $datos, ?Cabana $cabana = null): Cabana
     {
@@ -37,7 +37,7 @@ class ServicioCabanas
                 }
                 $this->autorizar($solicitud, $permiso);
                 $registro = $cabana ? Cabana::lockForUpdate()->findOrFail($cabana->id) : new Cabana;
-                if ($cabana && $registro->reservaciones()->whereIn('estado', ['por_confirmar', 'pendiente', 'confirmada', 'hospedada'])->where('cantidad_huespedes', '>', $datos['capacidad_maxima'])->exists()) {
+                if ($cabana && $registro->reservaciones()->whereIn('estado', ['pendiente', 'confirmada', 'hospedada'])->where('cantidad_huespedes', '>', $datos['capacidad_maxima'])->exists()) {
                     throw ValidationException::withMessages(['capacidad_maxima' => 'La capacidad no puede quedar por debajo de una reservación vigente.']);
                 }
                 $anteriores = $registro->toArray();
@@ -58,6 +58,9 @@ class ServicioCabanas
                     $registro->imagen_principal = $rutaImagen;
                 }
                 $registro->save();
+                if (! $cabana) {
+                    $this->calendario->bloqueoEstado($solicitud, $registro, $datos);
+                }
                 $this->auditoria->registrarCambio($solicitud, 'cabanas', $cabana ? 'actualizado' : 'creado', $registro->id, $anteriores, $registro->toArray());
 
                 return $registro;
@@ -81,16 +84,20 @@ class ServicioCabanas
 
     public function cambiarEstado(Request $solicitud, Cabana $cabana, array $datos): void
     {
-        $this->modificar($solicitud, $cabana, 'cabanas.cambiar_estado', 'estado_actualizado', function (Cabana $registro) use ($datos) {
+        $this->modificar($solicitud, $cabana, 'cabanas.cambiar_estado', 'estado_actualizado', function (Cabana $registro) use ($solicitud, $datos) {
             $registro->forceFill(Arr::only($datos, ['estado', 'activa']))->save();
+            $this->calendario->bloqueoEstado($solicitud, $registro, $datos);
         });
     }
 
     public function eliminar(Request $solicitud, Cabana $cabana): void
     {
         $this->modificar($solicitud, $cabana, 'cabanas.eliminar', 'eliminado', function (Cabana $registro) {
-            if ($registro->reservaciones()->whereIn('estado', ['por_confirmar', 'pendiente', 'confirmada', 'hospedada'])->exists()) {
+            if ($registro->reservaciones()->whereIn('estado', ['pendiente', 'confirmada', 'hospedada'])->exists()) {
                 throw ValidationException::withMessages(['cabana' => 'Cancela o reasigna las reservaciones vigentes antes de eliminar la cabaña.']);
+            }
+            if ($registro->eventosCalendario()->where('bloquea', true)->exists()) {
+                throw ValidationException::withMessages(['cabana' => 'Hay bloqueos de calendario vigentes. Libéralos en su origen antes de eliminar la cabaña.']);
             }
             $registro->delete();
         });

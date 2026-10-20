@@ -61,3 +61,10 @@
     background: white;
     padding: 1rem;
 }
+
+.calendario-mes { display: grid; grid-template-columns: minmax(0, 1fr); gap: .5rem; }
+.calendario-dia { min-width: 0; }
+@media (min-width: 768px) {
+    .calendario-mes { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .calendario-dia { min-height: 10rem; }
+}

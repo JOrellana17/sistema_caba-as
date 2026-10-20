@@ -35,6 +35,11 @@ class Cabana extends Model
         return $this->hasMany(Reservacion::class, 'cabana_id');
     }
 
+    public function eventosCalendario(): HasMany
+    {
+        return $this->hasMany(EventoCalendario::class, 'cabana_id');
+    }
+
     protected function casts(): array
     {
         return [

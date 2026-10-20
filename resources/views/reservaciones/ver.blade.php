@@ -3,6 +3,12 @@
 @section('contenido')
 <h1 class="h3 mb-3">Reservación</h1>
 <p class="text-body-secondary">Código: {{ $reservacion->codigo }}</p>
+@if ($reservacion->eventoCalendario)
+    <div class="alert alert-info">Esta reservación está vinculada a {{ strtoupper($reservacion->eventoCalendario->origen) }}. Cancelarla o reagendarla en CEC conserva el bloqueo externo hasta comprobar su cambio en el origen.
+        @can('reservaciones.ver_calendario')<a href="{{ route('calendario.evento', $reservacion->eventoCalendario) }}">Revisar evento externo</a>@endcan
+    </div>
+    @if ($reservacion->eventoCalendario->discrepancia)<p class="alert alert-warning">Hay una discrepancia con el calendario de origen. Revisa ambas operaciones; CEC conserva las fechas e importes de esta reservación.</p>@endif
+@endif
 <div class="card card-body mb-4">
     <dl class="row mb-0">
         <dt class="col-md-3">Cabaña</dt><dd class="col-md-9">{{ $reservacion->cabana->nombre }}</dd>
@@ -28,21 +34,26 @@
     </dl>
     @if ($reservacion->notas)<p class="mt-3 mb-0 text-break">{{ $reservacion->notas }}</p>@endif
     @if ($reservacion->motivo_cancelacion)<p class="mt-3 mb-0">Motivo de cancelación: {{ $reservacion->motivo_cancelacion }}</p>@endif
-    @if (in_array($reservacion->estado, ['por_confirmar', 'pendiente']))
-        <p class="alert alert-warning mt-3 mb-0">Esta solicitud está pendiente de confirmar y no bloquea disponibilidad.</p>
+    @if ($reservacion->estado === 'finalizada' && ! $reservacion->fecha_salida_registrada)
+        <p class="alert alert-info mt-3 mb-0">La estancia está finalizada. No se registró una hora de salida física.</p>
+    @endif
+    @if (in_array($reservacion->estado, ['pendiente']))
+        <p class="alert alert-warning mt-3 mb-0">Esta solicitud está pendiente de confirmar. Por sí sola no bloquea disponibilidad; un evento externo vinculado conserva su propio bloqueo.</p>
     @endif
 </div>
+@can('calendario.exportar')
+    @if (in_array($reservacion->estado, ['confirmada', 'hospedada'], true) && ! $reservacion->eventoCalendario)
+        <a class="btn btn-outline-secondary mb-3" href="{{ route('calendario.descargar', ['reservacion_id' => $reservacion->id, 'desde' => $reservacion->fecha_entrada->format('Y-m-d'), 'hasta' => $reservacion->fecha_salida->format('Y-m-d')]) }}">Descargar ICS de esta reservación</a>
+    @endif
+@endcan
 <div class="d-flex flex-wrap gap-2 mb-4">
     @can('reservaciones.editar')
-        @if (in_array($reservacion->estado, ['por_confirmar', 'pendiente', 'confirmada']))
+        @if (in_array($reservacion->estado, ['pendiente', 'confirmada']))
             @can('huespedes.buscar')<a class="btn btn-outline-primary" href="{{ route('reservaciones.editar', $reservacion) }}">Reagendar o editar</a>@endcan
-        @endif
-        @if ($reservacion->estado === 'por_confirmar')
-            <form method="POST" action="{{ route('reservaciones.pendiente', $reservacion) }}">@csrf @method('PUT')<button class="btn btn-outline-secondary">Marcar pendiente</button></form>
         @endif
     @endcan
     @can('reservaciones.confirmar')
-        @if (in_array($reservacion->estado, ['por_confirmar', 'pendiente']))
+        @if (in_array($reservacion->estado, ['pendiente']))
             <form method="POST" action="{{ route('reservaciones.confirmar', $reservacion) }}" data-confirmar="¿Confirmar y bloquear la cabaña?">@csrf @method('PUT')<button class="btn btn-primary">Confirmar</button></form>
         @endif
     @endcan
@@ -57,19 +68,19 @@
         @endif
     @endcan
     @can('reservaciones.marcar_no_presentado')
-        @if (in_array($reservacion->estado, ['por_confirmar', 'pendiente', 'confirmada']))
+        @if (in_array($reservacion->estado, ['pendiente', 'confirmada']))
             <form method="POST" action="{{ route('reservaciones.no_presentado', $reservacion) }}" data-confirmar="¿Marcar como no presentado? Solo se permite desde la salida prevista.">@csrf @method('PUT')<button class="btn btn-outline-secondary">No presentado</button></form>
         @endif
     @endcan
     @can('reservaciones.eliminar')
-        @if (in_array($reservacion->estado, ['por_confirmar', 'pendiente', 'cancelada', 'no_presentado']))
+        @if (in_array($reservacion->estado, ['pendiente', 'cancelada', 'no_presentado']))
             <form method="POST" action="{{ route('reservaciones.eliminar', $reservacion) }}" data-confirmar="¿Eliminar lógicamente esta reservación?">@csrf @method('DELETE')<button class="btn btn-outline-danger">Eliminar</button></form>
         @endif
     @endcan
 </div>
 @can('reservaciones.cancelar')
-    @if (in_array($reservacion->estado, ['por_confirmar', 'pendiente', 'confirmada']))
-        <form method="POST" action="{{ route('reservaciones.cancelar', $reservacion) }}" class="card card-body mb-4" data-confirmar="¿Cancelar y liberar la cabaña?">
+    @if (in_array($reservacion->estado, ['pendiente', 'confirmada']))
+        <form method="POST" action="{{ route('reservaciones.cancelar', $reservacion) }}" class="card card-body mb-4" data-confirmar="¿Cancelar esta reservación? Los otros bloqueos vigentes se conservan.">
             @csrf @method('PUT')
             <label for="motivo_cancelacion" class="form-label">Motivo de cancelación (opcional)</label>
             <textarea class="form-control mb-3" id="motivo_cancelacion" name="motivo_cancelacion" maxlength="5000" rows="2">{{ is_string(old('motivo_cancelacion')) ? old('motivo_cancelacion') : '' }}</textarea>
@@ -79,7 +90,7 @@
 @endcan
 @can('reservaciones.editar')
     @canany(['reservaciones.autorizar_entrada_temprana', 'reservaciones.autorizar_salida_tardia'])
-        @if (in_array($reservacion->estado, ['por_confirmar', 'pendiente', 'confirmada', 'hospedada']))
+        @if (in_array($reservacion->estado, ['pendiente', 'confirmada', 'hospedada']))
         <form method="POST" action="{{ route('reservaciones.horarios', $reservacion) }}" class="card card-body mb-4">
             @csrf @method('PUT')
             <h2 class="h5">Autorizar horario excepcional</h2>

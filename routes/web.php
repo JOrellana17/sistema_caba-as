@@ -3,8 +3,13 @@
 use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\AutenticacionController;
 use App\Http\Controllers\CabanaController;
+use App\Http\Controllers\CalendarioController;
 use App\Http\Controllers\DisponibilidadController;
+use App\Http\Controllers\EnlaceCalendarioController;
+use App\Http\Controllers\EventoCalendarioController;
+use App\Http\Controllers\FuenteCalendarioController;
 use App\Http\Controllers\HuespedController;
+use App\Http\Controllers\InicioController;
 use App\Http\Controllers\PermisoController;
 use App\Http\Controllers\ReservacionController;
 use App\Http\Controllers\RolController;
@@ -15,19 +20,37 @@ Route::get('/', function () {
     return view('welcome');
 })->name('portada');
 
+Route::get('/icalendario/{token}.ics', [EnlaceCalendarioController::class, 'feed'])
+    ->where('token', '[a-f0-9]{64}')->middleware('throttle:120,1')->name('calendario.feed');
+
 Route::middleware('guest')->group(function () {
     Route::get('/iniciar-sesion', [AutenticacionController::class, 'mostrar'])->name('sesion.mostrar');
     Route::post('/iniciar-sesion', [AutenticacionController::class, 'iniciar'])->name('sesion.iniciar');
 });
 
 Route::middleware(['auth', 'usuario.activo', 'auth.session'])->group(function () {
+    Route::get('/calendario', [CalendarioController::class, 'ver'])->middleware('can:reservaciones.ver_calendario')->name('calendario.ver');
+    Route::get('/calendario/fuentes', [FuenteCalendarioController::class, 'listar'])->name('calendario.fuentes');
+    Route::post('/calendario/fuentes', [FuenteCalendarioController::class, 'guardar'])->middleware('can:calendario.administrar_fuentes')->name('calendario.fuentes.guardar');
+    Route::get('/calendario/fuentes/{fuente}/editar', [FuenteCalendarioController::class, 'editar'])->middleware('can:calendario.administrar_fuentes')->name('calendario.fuentes.editar');
+    Route::put('/calendario/fuentes/{fuente}', [FuenteCalendarioController::class, 'actualizar'])->middleware('can:calendario.administrar_fuentes')->name('calendario.fuentes.actualizar');
+    Route::post('/calendario/fuentes/{fuente}/previsualizar', [FuenteCalendarioController::class, 'previsualizar'])->middleware(['can:calendario.importar', 'throttle:10,1'])->name('calendario.previsualizar');
+    Route::post('/calendario/fuentes/{fuente}/importar', [FuenteCalendarioController::class, 'importar'])->middleware('can:calendario.importar')->name('calendario.importar');
+    Route::post('/calendario/fuentes/{fuente}/suspender', [FuenteCalendarioController::class, 'suspender'])->middleware('can:calendario.administrar_fuentes')->name('calendario.fuentes.suspender');
+    Route::post('/calendario/fuentes/{fuente}/sincronizar', [FuenteCalendarioController::class, 'sincronizar'])->middleware(['can:calendario.sincronizar', 'throttle:5,1'])->name('calendario.sincronizar');
+    Route::get('/calendario/eventos/{evento}', [EventoCalendarioController::class, 'ver'])->middleware('can:reservaciones.ver_calendario')->name('calendario.evento');
+    Route::post('/calendario/bloqueos', [EventoCalendarioController::class, 'bloquear'])->middleware('can:calendario.gestionar_bloqueos')->name('calendario.bloquear');
+    Route::post('/calendario/eventos/{evento}/liberar', [EventoCalendarioController::class, 'liberar'])->middleware('can:calendario.gestionar_bloqueos')->name('calendario.liberar');
+    Route::post('/calendario/eventos/{evento}/vincular', [EventoCalendarioController::class, 'vincular'])->middleware(['can:calendario.vincular', 'can:reservaciones.editar'])->name('calendario.vincular');
+    Route::post('/calendario/enlaces', [EnlaceCalendarioController::class, 'guardar'])->middleware('can:calendario.gestionar_enlaces')->name('calendario.enlaces.guardar');
+    Route::post('/calendario/enlaces/{enlace}/revocar', [EnlaceCalendarioController::class, 'revocar'])->middleware('can:calendario.gestionar_enlaces')->name('calendario.enlaces.revocar');
+    Route::get('/calendario/descargar', [EnlaceCalendarioController::class, 'descargar'])->middleware('can:calendario.exportar')->name('calendario.descargar');
     Route::get('/reservaciones/disponibilidad', [DisponibilidadController::class, 'consultar'])->middleware('can:reservaciones.ver_disponibilidad')->name('reservaciones.disponibilidad');
     Route::get('/reservaciones', [ReservacionController::class, 'listar'])->middleware('can:reservaciones.ver')->name('reservaciones.listar');
     Route::get('/reservaciones/crear', [ReservacionController::class, 'crear'])->middleware('can:reservaciones.crear')->name('reservaciones.crear');
     Route::post('/reservaciones', [ReservacionController::class, 'guardar'])->middleware('can:reservaciones.crear')->name('reservaciones.guardar');
     Route::get('/reservaciones/{reservacion}/editar', [ReservacionController::class, 'editar'])->middleware('can:reservaciones.editar')->name('reservaciones.editar');
     Route::put('/reservaciones/{reservacion}', [ReservacionController::class, 'actualizar'])->middleware('can:reservaciones.editar')->name('reservaciones.actualizar');
-    Route::put('/reservaciones/{reservacion}/pendiente', [ReservacionController::class, 'pendiente'])->middleware('can:reservaciones.editar')->name('reservaciones.pendiente');
     Route::put('/reservaciones/{reservacion}/confirmar', [ReservacionController::class, 'confirmar'])->middleware('can:reservaciones.confirmar')->name('reservaciones.confirmar');
     Route::put('/reservaciones/{reservacion}/entrada', [ReservacionController::class, 'entrada'])->middleware('can:reservaciones.registrar_entrada')->name('reservaciones.entrada');
     Route::put('/reservaciones/{reservacion}/salida', [ReservacionController::class, 'salida'])->middleware('can:reservaciones.registrar_salida')->name('reservaciones.salida');
@@ -88,6 +111,6 @@ Route::middleware(['auth', 'usuario.activo', 'auth.session'])->group(function ()
     Route::put('/roles/{rol}/permisos', [RolController::class, 'permisos'])->middleware('can:roles.gestionar_permisos')->name('roles.permisos');
     Route::get('/auditoria', [AuditoriaController::class, 'listar'])->middleware('can:auditoria.ver')->name('auditoria.listar');
     Route::get('/auditoria/{registro}', [AuditoriaController::class, 'ver'])->middleware('can:auditoria.ver')->name('auditoria.ver');
-    Route::view('/inicio', 'inicio')->name('inicio');
+    Route::get('/inicio', [InicioController::class, 'ver'])->name('inicio');
     Route::post('/cerrar-sesion', [AutenticacionController::class, 'cerrar'])->name('sesion.cerrar');
 });

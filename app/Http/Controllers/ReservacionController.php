@@ -6,6 +6,7 @@ use App\Http\Requests\CambiarReservacionRequest;
 use App\Http\Requests\ConsultarReservacionesRequest;
 use App\Http\Requests\GuardarReservacionRequest;
 use App\Models\Cabana;
+use App\Models\EventoCalendario;
 use App\Models\Huesped;
 use App\Models\Reservacion;
 use App\Services\ServicioDisponibilidad;
@@ -43,7 +44,22 @@ class ReservacionController extends Controller
 
     public function crear(Request $solicitud): View
     {
-        return $this->formulario($solicitud, new Reservacion);
+        $reservacion = new Reservacion;
+        if ($solicitud->filled('evento_id')) {
+            Gate::authorize('calendario.vincular');
+            $solicitud->validate(['evento_id' => ['required', 'integer', 'exists:eventos_calendario,id']]);
+            $evento = EventoCalendario::findOrFail($solicitud->integer('evento_id'));
+            abort_unless($evento->bloquea && ! $evento->reservacion_id && $evento->origen !== 'cec', 422);
+            $reservacion->forceFill([
+                'cabana_id' => $evento->cabana_id,
+                'fecha_entrada' => $evento->inicio->setTimezone(ServicioDisponibilidad::ZONA_HORARIA)->format('Y-m-d'),
+                'fecha_salida' => $evento->fin->setTimezone(ServicioDisponibilidad::ZONA_HORARIA)->format('Y-m-d'),
+                'entrada_prevista' => $evento->inicio,
+                'salida_prevista' => $evento->fin,
+            ]);
+        }
+
+        return $this->formulario($solicitud, $reservacion);
     }
 
     public function editar(Request $solicitud, Reservacion $reservacion): View
@@ -53,7 +69,7 @@ class ReservacionController extends Controller
 
     public function ver(Reservacion $reservacion): View
     {
-        $reservacion->load(['cabana:id,nombre,deleted_at']);
+        $reservacion->load(['cabana:id,nombre,deleted_at', 'eventoCalendario']);
         if (Gate::any(['huespedes.ver', 'huespedes.buscar'])) {
             $reservacion->load('huesped');
         }
@@ -73,11 +89,6 @@ class ReservacionController extends Controller
         $registro = $this->reservaciones->guardar($solicitud, $solicitud->validated(), $reservacion);
 
         return $this->volver($solicitud, $registro);
-    }
-
-    public function pendiente(CambiarReservacionRequest $solicitud, Reservacion $reservacion): RedirectResponse
-    {
-        return $this->transicion($solicitud, $reservacion, 'pendiente');
     }
 
     public function confirmar(CambiarReservacionRequest $solicitud, Reservacion $reservacion): RedirectResponse

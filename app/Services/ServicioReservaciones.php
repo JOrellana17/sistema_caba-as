@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Cabana;
+use App\Models\EventoCalendario;
 use App\Models\Reservacion;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -29,7 +30,7 @@ class ServicioReservaciones
             $this->autorizar($solicitud, $reservacion ? 'reservaciones.editar' : 'reservaciones.crear');
             $this->autorizar($solicitud, 'huespedes.buscar');
             $registro = $reservacion ? $this->releer($reservacion) : new Reservacion;
-            if ($reservacion && ! in_array($registro->estado, ['por_confirmar', 'pendiente', 'confirmada'], true)) {
+            if ($reservacion && ! in_array($registro->estado, ['pendiente', 'confirmada'], true)) {
                 $this->error('estado', 'Solo puedes reagendar antes de registrar la entrada.');
             }
             $this->huespedes->validar((int) $datos['huesped_id']);
@@ -38,7 +39,17 @@ class ServicioReservaciones
                 $this->error('cabana_id', 'Selecciona una cabaña existente que no esté eliminada.');
             }
             $this->autorizarHorarios($solicitud, $datos['hora_entrada'], $datos['hora_salida']);
-            $this->exigirDisponibilidad($cabana, $datos, $reservacion ? $registro : null);
+            $evento = null;
+            if (! empty($datos['evento_id'])) {
+                $this->autorizar($solicitud, 'calendario.vincular');
+                $evento = EventoCalendario::lockForUpdate()->findOrFail($datos['evento_id']);
+                $periodoEvento = $this->disponibilidad->periodo($datos['fecha_entrada'], $datos['fecha_salida'], $datos['hora_entrada'], $datos['hora_salida']);
+                if ($reservacion || $evento->reservacion_id || ! $evento->bloquea || $evento->origen === 'cec'
+                    || $evento->cabana_id !== $cabana->id || ! $evento->inicio->equalTo($periodoEvento['entrada']) || ! $evento->fin->equalTo($periodoEvento['salida'])) {
+                    $this->error('evento_id', 'El evento ya cambió o no corresponde a la cabaña y horarios. Vuelve al calendario.');
+                }
+            }
+            $this->exigirDisponibilidad($cabana, $datos, $reservacion ? $registro : null, false, $evento);
             $anteriores = $registro->toArray();
             $periodo = $this->disponibilidad->periodo($datos['fecha_entrada'], $datos['fecha_salida'], $datos['hora_entrada'], $datos['hora_salida']);
             $precios = $this->precios->calcular($cabana, $datos, $reservacion ? $registro : null);
@@ -46,9 +57,15 @@ class ServicioReservaciones
             $registro->forceFill($precios);
             $registro->forceFill(['entrada_prevista' => $periodo['entrada'], 'salida_prevista' => $periodo['salida']]);
             if (! $reservacion) {
-                $registro->forceFill(['codigo' => (string) Str::uuid(), 'estado' => $datos['estado_inicial'], 'creado_por' => $solicitud->user()->id]);
+                $registro->forceFill(['codigo' => (string) Str::uuid(), 'estado' => 'pendiente', 'creado_por' => $solicitud->user()->id]);
             }
             $registro->save();
+            if ($evento) {
+                $anterioresEvento = $evento->toArray();
+                $evento->update(['reservacion_id' => $registro->id, 'discrepancia' => false, 'conflicto' => false]);
+                $this->auditoria->registrarCambio($solicitud, 'calendario', 'evento_completado', $evento->id, $anterioresEvento, $evento->toArray());
+            }
+            $this->revisarEvento($solicitud, $registro);
             $this->auditoria->registrarCambio($solicitud, 'reservaciones', $reservacion ? 'reagendada' : 'creada', $registro->id, $anteriores, $registro->toArray());
 
             return $registro;
@@ -58,17 +75,16 @@ class ServicioReservaciones
     public function cambiarEstado(Request $solicitud, Reservacion $reservacion, string $destino, array $datos = []): void
     {
         $permisos = [
-            'pendiente' => 'editar', 'confirmada' => 'confirmar', 'hospedada' => 'registrar_entrada',
+            'confirmada' => 'confirmar', 'hospedada' => 'registrar_entrada',
             'finalizada' => 'registrar_salida', 'cancelada' => 'cancelar', 'no_presentado' => 'marcar_no_presentado',
         ];
         abort_unless(isset($permisos[$destino]), 403);
         $origenes = [
-            'pendiente' => ['por_confirmar'],
-            'confirmada' => ['por_confirmar', 'pendiente'],
+            'confirmada' => ['pendiente'],
             'hospedada' => ['confirmada'],
             'finalizada' => ['hospedada'],
-            'cancelada' => ['por_confirmar', 'pendiente', 'confirmada'],
-            'no_presentado' => ['por_confirmar', 'pendiente', 'confirmada'],
+            'cancelada' => ['pendiente', 'confirmada'],
+            'no_presentado' => ['pendiente', 'confirmada'],
         ];
         $this->modificar($solicitud, $reservacion, 'reservaciones.'.$permisos[$destino], $destino, function (Reservacion $registro) use ($solicitud, $destino, $datos, $origenes) {
             if (! in_array($registro->estado, $origenes[$destino], true)) {
@@ -109,7 +125,7 @@ class ServicioReservaciones
     public function horarios(Request $solicitud, Reservacion $reservacion, array $datos): void
     {
         $this->modificar($solicitud, $reservacion, 'reservaciones.editar', 'horario_autorizado', function (Reservacion $registro) use ($solicitud, $datos) {
-            if (! in_array($registro->estado, ['por_confirmar', 'pendiente', 'confirmada', 'hospedada'], true)) {
+            if (! in_array($registro->estado, Reservacion::ESTADOS_ACTIVOS, true)) {
                 $this->error('estado', 'No puedes cambiar horarios de una reservación terminada.');
             }
             $periodoAnterior = $this->datosPeriodo($registro);
@@ -136,11 +152,38 @@ class ServicioReservaciones
     public function eliminar(Request $solicitud, Reservacion $reservacion): void
     {
         $this->modificar($solicitud, $reservacion, 'reservaciones.eliminar', 'eliminada', function (Reservacion $registro) {
-            if (! in_array($registro->estado, ['por_confirmar', 'pendiente', 'cancelada', 'no_presentado'], true)) {
+            if (! in_array($registro->estado, ['pendiente', 'cancelada', 'no_presentado'], true)) {
                 $this->error('estado', 'Cancela primero la reservación. Las estancias registradas se conservan.');
             }
             $registro->delete();
         });
+    }
+
+    public function finalizarVencidas(): int
+    {
+        $limite = CarbonImmutable::now('UTC');
+        $finalizadas = 0;
+        Reservacion::where('estado', 'hospedada')->where('salida_prevista', '<=', $limite)
+            ->select(['id', 'cabana_id'])->chunkById(100, function ($registros) use ($limite, &$finalizadas) {
+                foreach ($registros as $candidata) {
+                    $finalizadas += DB::transaction(function () use ($candidata, $limite) {
+                        $this->bloqueo->adquirir([$candidata->cabana_id]);
+                        $registro = Reservacion::lockForUpdate()->find($candidata->id);
+                        if (! $registro || $registro->cabana_id !== $candidata->cabana_id
+                            || $registro->estado !== 'hospedada' || $registro->salida_prevista->greaterThan($limite)) {
+                            return 0;
+                        }
+                        $anteriores = $registro->toArray();
+                        $registro->estado = 'finalizada';
+                        $registro->save();
+                        $this->auditoria->registrarCambio(new Request, 'reservaciones', 'finalizada_automaticamente', $registro->id, $anteriores, $registro->toArray());
+
+                        return 1;
+                    }, 3);
+                }
+            });
+
+        return $finalizadas;
     }
 
     private function modificar(Request $solicitud, Reservacion $reservacion, string $permiso, string $accion, callable $operacion): void
@@ -151,8 +194,25 @@ class ServicioReservaciones
             $registro = $this->releer($reservacion);
             $anteriores = $registro->toArray();
             $operacion($registro);
+            $this->revisarEvento($solicitud, $registro);
             $this->auditoria->registrarCambio($solicitud, 'reservaciones', $accion, $registro->id, $anteriores, $registro->toArray());
         }, 3);
+    }
+
+    private function revisarEvento(Request $solicitud, Reservacion $registro): void
+    {
+        $evento = $registro->eventoCalendario()->lockForUpdate()->first();
+        if (! $evento) {
+            return;
+        }
+        $discrepancia = ! $evento->bloquea || $registro->trashed() || in_array($registro->estado, ['cancelada', 'no_presentado'], true)
+            || $registro->cabana_id !== $evento->cabana_id || ! $registro->entrada_prevista->equalTo($evento->inicio)
+            || ! $registro->salida_prevista->equalTo($evento->fin);
+        if ($evento->discrepancia !== $discrepancia) {
+            $anteriores = $evento->toArray();
+            $evento->update(['discrepancia' => $discrepancia]);
+            $this->auditoria->registrarCambio($solicitud, 'calendario', 'vinculo_revisado', $evento->id, $anteriores, $evento->toArray());
+        }
     }
 
     private function releer(Reservacion $anterior): Reservacion
@@ -176,9 +236,9 @@ class ServicioReservaciones
         ];
     }
 
-    private function exigirDisponibilidad(Cabana $cabana, array $datos, ?Reservacion $excluida, bool $entradaReal = false): void
+    private function exigirDisponibilidad(Cabana $cabana, array $datos, ?Reservacion $excluida, bool $entradaReal = false, ?EventoCalendario $evento = null): void
     {
-        if (! $this->disponibilidad->verificar($cabana, $datos['fecha_entrada'], $datos['fecha_salida'], (int) $datos['cantidad_huespedes'], $excluida, $datos['hora_entrada'], $datos['hora_salida'], $entradaReal)) {
+        if (! $this->disponibilidad->verificar($cabana, $datos['fecha_entrada'], $datos['fecha_salida'], (int) $datos['cantidad_huespedes'], $excluida, $datos['hora_entrada'], $datos['hora_salida'], $entradaReal, $evento)) {
             $this->error('cabana_id', 'La cabaña no está disponible para estas fechas, horarios y cantidad de huéspedes.');
         }
     }
