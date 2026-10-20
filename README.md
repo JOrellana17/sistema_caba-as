@@ -1,42 +1,83 @@
 # Cabañas El Capitán
 
-Sistema administrativo interno construido en esta aplicación Laravel, con Blade, Bootstrap 5 y Vite. Utiliza **MySQL** en desarrollo y pruebas; no hay registro ni reservaciones públicas.
+Sistema administrativo en Laravel + Blade + Bootstrap 5 + Vite.
 
-## Instalación y desarrollo
+## Requisitos
 
-Consultar [docs/INSTALACION.md](docs/INSTALACION.md). `.env.example` utiliza MySQL y `sistema_cabanas`; las credenciales se completan en el entorno privado. Conservar la clave y los datos existentes. Verificar el destino antes de aplicar migraciones.
+- PHP 8.2+
+- Composer
+- Node.js 20+ y npm
+- MySQL 8+
 
-```text
+## Configurar entorno (`.env`)
+
+1. Copia el archivo de ejemplo:
+
+```bash
+copy .env.example .env
+```
+
+2. Edita `.env` y define al menos:
+
+```dotenv
+APP_NAME="Cabanas El Capitan"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=sistema_cabanas
+DB_USERNAME=tu_usuario_mysql
+DB_PASSWORD=tu_password_mysql
+```
+
+3. Genera la clave de la aplicación:
+
+```bash
+php artisan key:generate
+```
+
+## Instalación en máquina host
+
+```bash
 composer install
 npm.cmd ci --ignore-scripts
 php artisan config:clear
-php artisan env
+php artisan cache:clear
+```
+
+## Migraciones
+
+Ejecuta migraciones sobre la base configurada en `.env`:
+
+```bash
+php artisan migrate --force
+```
+
+Verificar estado:
+
+```bash
 php artisan migrate:status
+```
+
+## Build de frontend
+
+Compilar assets para producción:
+
+```bash
 npm.cmd run build
+```
+
+Modo desarrollo (watch):
+
+```bash
+npm.cmd run dev
+```
+
+## Ejecutar aplicación
+
+```bash
 php artisan serve
 ```
-
-Una instalación nueva necesita crear su base MySQL y configurar acceso antes de migrar. Esta instalación ya tiene sus datos y usuario administrativo; no reiniciar ni repetir su importación.
-
-## Pruebas
-
-```text
-php artisan test
-php vendor/bin/pint --test
-node --test tests/js/buscador-huesped.test.js
-npm.cmd run build
-php artisan view:cache
-```
-
-PHPUnit fuerza `testing` y MySQL. El soporte crea esquemas con nombres aleatorios `sistema_cabanas_pruebas_*`, revierte transacciones entre pruebas y retira únicamente los esquemas creados por la ejecución. Requiere acceso para crear/retirar esos esquemas; nunca utiliza ni vacía `sistema_cabanas`. No se usa `migrate:fresh` ni `db:wipe`. Las credenciales se cargan de `.env` o de un `.env.testing` privado y excluido de Git.
-
-## Documentos
-
-- [AGENTS.md](AGENTS.md): instrucciones de trabajo.
-- [INSTRUCCIONES_AGENTE_CONSTRUCTOR_CEC.md](INSTRUCCIONES_AGENTE_CONSTRUCTOR_CEC.md): orden de construcción.
-- [SYSTEM_SPEC_CEC_RECONSTRUCCION.md](SYSTEM_SPEC_CEC_RECONSTRUCCION.md): requisitos; prevalecen las secciones 72 en adelante y las decisiones posteriores del usuario.
-- [docs/PLAN_IMPLEMENTACION.md](docs/PLAN_IMPLEMENTACION.md): fases y comprobaciones reales.
-- [docs/DECISIONES.md](docs/DECISIONES.md): decisiones vigentes e historial.
-- [docs/PLAN_CAMBIO_MYSQL.md](docs/PLAN_CAMBIO_MYSQL.md): cambio de configuración y pruebas a MySQL.
-
-Las migraciones y resultados antiguos se conservan como evidencia. El archivo SQLite anterior permanece excluido de Git como origen histórico, sin conexión activa.

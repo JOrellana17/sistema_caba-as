@@ -1,10 +1,8 @@
 *.log
 .DS_Store
-.env
-.env.backup
-.env.production
-.env.testing
-.env.testing.*
+# Entornos y credenciales locales; conservar la plantilla sin secretos.
+.env*
+!.env.example
 *.sql
 *.sql.gz
 .phpactor.json
@@ -25,7 +23,45 @@
 /storage/*.key
 /storage/pail
 /vendor
+# Resultados, perfiles de navegador y artefactos de herramientas de desarrollo.
+/coverage
+/htmlcov
+/test-results
+/playwright-report
+/.cache
+/.npm
+/npm-debug.log*
+/yarn-debug.log*
+/yarn-error.log*
+/.php-cs-fixer.cache
+/.phpstan.cache
+*.swp
+*.swo
+*~
+# Backups y volcados privados; no excluir fuentes, pruebas, documentación ni locks.
+/backups
+/backup
+*.sql.zip
+*.dump
+*.bak
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
 _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Archivos de construcción/guía del proyecto y soporte de pruebas (solo a futuro).
+# Nota: si ya están versionados, seguirán en Git hasta quitarlos del índice.
+/.agents
+/AGENTS.md
+/ARRANQUE_CODEX.md
+/INSTRUCCIONES_AGENTE_CONSTRUCTOR_CEC.md
+/SYSTEM_SPEC.md
+/SYSTEM_SPEC_CEC_RECONSTRUCCION.md
+/docs
+/tests
+/phpunit.xml
