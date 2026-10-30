@@ -3,6 +3,13 @@
 @section('contenido')
 <h1 class="h3 mb-3">Reservación</h1>
 <p class="text-body-secondary">Código: {{ $reservacion->codigo }}</p>
+@if ($reservacion->cabana->aseosPendientes->isNotEmpty())
+    <section class="alert alert-warning mb-4" aria-labelledby="titulo-aseo">
+        <h2 class="h5" id="titulo-aseo">Cabaña en aseo</h2>
+        <p>Se permiten reservaciones futuras. Antes de registrar la entrada debe confirmarse el aseo.</p>
+        @foreach ($reservacion->cabana->aseosPendientes as $aseo)<x-confirmar-aseo :aseo="$aseo" />@endforeach
+    </section>
+@endif
 @if ($reservacion->eventoCalendario)
     <div class="alert alert-info">Esta reservación está vinculada a {{ strtoupper($reservacion->eventoCalendario->origen) }}. Cancelarla o reagendarla en CEC conserva el bloqueo externo hasta comprobar su cambio en el origen.
         @can('reservaciones.ver_calendario')<a href="{{ route('calendario.evento', $reservacion->eventoCalendario) }}">Revisar evento externo</a>@endcan
@@ -13,6 +20,9 @@
     <dl class="row mb-0">
         <dt class="col-md-3">Cabaña</dt><dd class="col-md-9">{{ $reservacion->cabana->nombre }}</dd>
         <dt class="col-md-3">Estado</dt><dd class="col-md-9">{{ \App\Models\Reservacion::ESTADOS[$reservacion->estado] }}</dd>
+        @if ($reservacion->aseo)
+            <dt class="col-md-3">Aseo de esta estancia</dt><dd class="col-md-9">{{ $reservacion->aseo->confirmado_en ? 'Confirmado el '.$reservacion->aseo->confirmado_en->setTimezone(\App\Services\ServicioDisponibilidad::ZONA_HORARIA)->format('d/m/Y H:i') : 'En aseo' }}</dd>
+        @endif
         <dt class="col-md-3">Entrada prevista</dt><dd class="col-md-9">{{ $reservacion->entrada_prevista->setTimezone(\App\Services\ServicioDisponibilidad::ZONA_HORARIA)->format('d/m/Y H:i') }}</dd>
         <dt class="col-md-3">Salida prevista</dt><dd class="col-md-9">{{ $reservacion->salida_prevista->setTimezone(\App\Services\ServicioDisponibilidad::ZONA_HORARIA)->format('d/m/Y H:i') }}</dd>
         @if ($reservacion->fecha_entrada_registrada)

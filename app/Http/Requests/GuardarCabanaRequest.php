@@ -4,14 +4,32 @@ namespace App\Http\Requests;
 
 use App\Models\Cabana;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class GuardarCabanaRequest extends SolicitudAdministrativa
 {
+    protected function prepareForValidation(): void
+    {
+        $camas = $this->input('camas');
+        if (is_array($camas) && count($camas) === count(Cabana::TIPOS_CAMA)
+            && array_diff(array_keys($camas), array_keys(Cabana::TIPOS_CAMA)) === []
+            && count(array_filter($camas, fn ($cantidad) => $cantidad !== null && $cantidad !== '')) === 0) {
+            $this->merge(['camas' => null]);
+        }
+    }
+
     public function rules(): array
     {
         $editando = $this->route('cabana') !== null;
 
         return [
+            'cantidad_camas' => [Rule::requiredIf(fn () => $this->has('tipos_camas')), 'nullable', 'integer', 'min:0', 'max:'.Cabana::MAXIMO_CAMAS_FORMULARIO],
+            'tipos_camas' => ['nullable', 'array', 'list', 'max:'.Cabana::MAXIMO_CAMAS_FORMULARIO],
+            'tipos_camas.*' => ['required', 'string', Rule::in(array_keys(Cabana::TIPOS_CAMA))],
+            'camas' => $this->hasAny(['cantidad_camas', 'tipos_camas']) ? ['prohibited'] : ['sometimes', 'nullable', 'array:'.implode(',', array_keys(Cabana::TIPOS_CAMA)), 'required_array_keys:'.implode(',', array_keys(Cabana::TIPOS_CAMA))],
+            'camas.*' => ['required', 'integer', 'min:0', 'max:65535'],
+            'tiene_refrigerador' => ['sometimes', 'nullable', 'boolean'],
+            'tiene_aire_acondicionado' => ['sometimes', 'nullable', 'boolean'],
             'bloqueo_inicio' => ['nullable', Rule::requiredIf(fn () => is_string($this->input('estado')) && $this->input('estado') !== 'disponible'), 'date_format:Y-m-d\TH:i', 'required_with:bloqueo_fin'],
             'bloqueo_fin' => ['nullable', Rule::requiredIf(fn () => is_string($this->input('estado')) && $this->input('estado') !== 'disponible'), 'date_format:Y-m-d\TH:i', 'required_with:bloqueo_inicio', 'after:bloqueo_inicio'],
             'nombre' => ['required', 'string', 'max:120'],
@@ -36,6 +54,18 @@ class GuardarCabanaRequest extends SolicitudAdministrativa
     public function messages(): array
     {
         return array_merge(parent::messages(), [
+            'cantidad_camas.required' => 'Indica el número de camas para los tipos seleccionados.',
+            'cantidad_camas.integer' => 'El número de camas debe ser un entero.',
+            'cantidad_camas.min' => 'El número de camas no puede ser negativo.',
+            'cantidad_camas.max' => 'El formulario admite hasta '.Cabana::MAXIMO_CAMAS_FORMULARIO.' camas.',
+            'tipos_camas.list' => 'La lista de camas debe estar numerada consecutivamente.',
+            'tipos_camas.*.required' => 'Selecciona el tipo de esta cama.',
+            'tipos_camas.*.in' => 'Selecciona un tipo de cama permitido.',
+            'camas.required_array_keys' => 'Registra la cantidad de cada tipo de cama.',
+            'camas.*.required' => 'Registra la cantidad de este tipo de cama; utiliza cero si no tiene.',
+            'camas.*.integer' => 'La cantidad de camas debe ser un número entero.',
+            'camas.*.min' => 'La cantidad de camas no puede ser negativa.',
+            'camas.*.max' => 'La cantidad de camas no puede superar 65535.',
             'integer' => 'La capacidad debe ser un número entero.',
             'min' => 'La capacidad debe ser al menos :min.',
             'gte' => 'La capacidad máxima debe ser igual o mayor que la capacidad base.',
@@ -55,6 +85,11 @@ class GuardarCabanaRequest extends SolicitudAdministrativa
     public function attributes(): array
     {
         return [
+            'cantidad_camas' => 'número de camas',
+            'tipos_camas' => 'tipos de camas',
+            'camas' => 'camas',
+            'tiene_refrigerador' => 'refrigerador',
+            'tiene_aire_acondicionado' => 'aire acondicionado',
             'bloqueo_inicio' => 'inicio del bloqueo',
             'bloqueo_fin' => 'fin del bloqueo',
             'capacidad_base' => 'capacidad base',
@@ -63,5 +98,19 @@ class GuardarCabanaRequest extends SolicitudAdministrativa
             'precio_persona_adicional' => 'precio por persona adicional',
             'imagen' => 'imagen principal',
         ];
+    }
+
+    public function after(): array
+    {
+        return [function (Validator $validador) {
+            if (! $this->hasAny(['cantidad_camas', 'tipos_camas']) || $validador->errors()->hasAny(['cantidad_camas', 'tipos_camas'])) {
+                return;
+            }
+            $cantidad = $this->input('cantidad_camas');
+            $tipos = $this->input('tipos_camas') ?? [];
+            if (($cantidad === null && $tipos !== []) || ($cantidad !== null && (int) $cantidad !== count($tipos))) {
+                $validador->errors()->add('tipos_camas', 'Selecciona exactamente un tipo por cada cama indicada.');
+            }
+        }];
     }
 }

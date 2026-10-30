@@ -48,7 +48,7 @@
             <tbody>
             @forelse ($cabanas as $cabana)
                 <tr>
-                    <td>{{ $cabana->nombre }}</td>
+                    <td><p class="mb-2">{{ $cabana->nombre }}</p><x-equipamiento-cabana :cabana="$cabana" /></td>
                     <td>{{ $cabana->capacidad_base }} / {{ $cabana->capacidad_maxima }}</td>
                     <td>{{ $cabana->precio_base }}</td>
                     <td><span class="badge text-bg-secondary">{{ \App\Models\Cabana::ESTADOS[$cabana->estado] }}</span></td>

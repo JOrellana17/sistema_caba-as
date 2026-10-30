@@ -32,7 +32,9 @@
             <td>{{ $reservacion->cabana->nombre }}</td>
             <td>{{ $reservacion->entrada_prevista->setTimezone(\App\Services\ServicioDisponibilidad::ZONA_HORARIA)->format('d/m/Y H:i') }}<br>{{ $reservacion->salida_prevista->setTimezone(\App\Services\ServicioDisponibilidad::ZONA_HORARIA)->format('d/m/Y H:i') }}</td>
             <td>{{ $reservacion->cantidad_huespedes }}</td>
-            <td><span class="badge text-bg-secondary">{{ \App\Models\Reservacion::ESTADOS[$reservacion->estado] }}</span></td>
+            <td><span class="badge text-bg-secondary">{{ \App\Models\Reservacion::ESTADOS[$reservacion->estado] }}</span>
+                @if ($reservacion->aseo)<span class="badge {{ $reservacion->aseo->confirmado_en ? 'text-bg-success' : 'text-bg-warning' }}">{{ $reservacion->aseo->confirmado_en ? 'Aseo confirmado' : 'En aseo' }}</span>@endif
+            </td>
             <td>{{ $reservacion->moneda }} {{ $reservacion->subtotal }}</td>
             <td><a class="btn btn-sm btn-outline-primary" href="{{ route('reservaciones.ver', $reservacion) }}">Ver<span class="visually-hidden"> {{ $reservacion->codigo }}</span></a></td>
         </tr>

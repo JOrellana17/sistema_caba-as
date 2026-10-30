@@ -50,6 +50,11 @@ class Reservacion extends Model
         return $this->hasOne(EventoCalendario::class, 'reservacion_id');
     }
 
+    public function aseo(): HasOne
+    {
+        return $this->hasOne(AseoCabana::class, 'reservacion_id');
+    }
+
     protected function casts(): array
     {
         return [

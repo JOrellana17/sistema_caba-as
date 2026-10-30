@@ -23,7 +23,7 @@ class ReservacionController extends Controller
     public function listar(ConsultarReservacionesRequest $solicitud): View
     {
         $filtros = $solicitud->validated();
-        $consulta = Reservacion::with(['cabana:id,nombre,deleted_at']);
+        $consulta = Reservacion::with(['cabana:id,nombre,deleted_at', 'aseo:id,reservacion_id,confirmado_en']);
         foreach (['codigo', 'estado', 'cabana_id', 'huesped_id'] as $campo) {
             if ($solicitud->filled($campo)) {
                 $consulta->where($campo, $filtros[$campo]);
@@ -69,7 +69,7 @@ class ReservacionController extends Controller
 
     public function ver(Reservacion $reservacion): View
     {
-        $reservacion->load(['cabana:id,nombre,deleted_at', 'eventoCalendario']);
+        $reservacion->load(['cabana:id,nombre,deleted_at', 'cabana.aseosPendientes', 'aseo', 'eventoCalendario']);
         if (Gate::any(['huespedes.ver', 'huespedes.buscar'])) {
             $reservacion->load('huesped');
         }

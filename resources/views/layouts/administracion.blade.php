@@ -17,10 +17,11 @@
 </header>
 <nav class="bg-white border-bottom" aria-label="Administración">
     <div class="container d-flex flex-wrap gap-2 py-2">
-        <a class="btn btn-sm btn-outline-secondary" href="{{ route('inicio') }}">Inicio</a>
+        @if (! auth()->user()->esAseador())<a class="btn btn-sm btn-outline-secondary" href="{{ route('inicio') }}">Inicio</a>@endif
         @can('cabanas.ver')<a class="btn btn-sm btn-outline-primary" href="{{ route('cabanas.listar') }}">Cabañas</a>@endcan
         @can('reservaciones.ver_calendario')<a class="btn btn-sm btn-outline-primary" href="{{ route('calendario.ver') }}">Calendario</a>@endcan
         @can('reservaciones.ver')<a class="btn btn-sm btn-outline-primary" href="{{ route('reservaciones.listar') }}">Reservaciones</a>@endcan
+        @can('aseo.ver')<a class="btn btn-sm btn-outline-primary" href="{{ route('aseo.listar') }}">Aseo</a>@endcan
         @can('reservaciones.ver_disponibilidad')
             <a class="btn btn-sm btn-outline-primary" href="{{ route('reservaciones.disponibilidad') }}">Disponibilidad</a>
         @elsecan('cabanas.ver_disponibilidad')

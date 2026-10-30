@@ -21,6 +21,7 @@ class ServicioReservaciones
         private ServicioPreciosReservacion $precios,
         private ServicioSeleccionHuesped $huespedes,
         private ServicioAuditoria $auditoria,
+        private ServicioAseoCabanas $aseo,
     ) {}
 
     public function guardar(Request $solicitud, array $datos, ?Reservacion $reservacion = null): Reservacion
@@ -119,6 +120,9 @@ class ServicioReservaciones
                 $registro->forceFill(['cancelado_por' => $solicitud->user()->id, 'motivo_cancelacion' => $datos['motivo_cancelacion'] ?? null]);
             }
             $registro->save();
+            if ($destino === 'finalizada') {
+                $this->aseo->iniciar($solicitud, $registro);
+            }
         });
     }
 
@@ -176,6 +180,7 @@ class ServicioReservaciones
                         $anteriores = $registro->toArray();
                         $registro->estado = 'finalizada';
                         $registro->save();
+                        $this->aseo->iniciar(new Request, $registro);
                         $this->auditoria->registrarCambio(new Request, 'reservaciones', 'finalizada_automaticamente', $registro->id, $anteriores, $registro->toArray());
 
                         return 1;
@@ -238,6 +243,9 @@ class ServicioReservaciones
 
     private function exigirDisponibilidad(Cabana $cabana, array $datos, ?Reservacion $excluida, bool $entradaReal = false, ?EventoCalendario $evento = null): void
     {
+        if ($entradaReal) {
+            $this->disponibilidad->exigirEntradaHabilitada($cabana, $excluida);
+        }
         if (! $this->disponibilidad->verificar($cabana, $datos['fecha_entrada'], $datos['fecha_salida'], (int) $datos['cantidad_huespedes'], $excluida, $datos['hora_entrada'], $datos['hora_salida'], $entradaReal, $evento)) {
             $this->error('cabana_id', 'La cabaña no está disponible para estas fechas, horarios y cantidad de huéspedes.');
         }

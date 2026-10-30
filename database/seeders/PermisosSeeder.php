@@ -34,6 +34,10 @@ class PermisosSeeder extends Seeder
             if ($empleado->wasRecentlyCreated) {
                 $empleado->permisos()->sync(Permiso::whereIn('codigo', config('roles.empleado'))->pluck('id'));
             }
+            $aseador = Rol::firstOrCreate(['codigo' => 'aseador'], [
+                'nombre' => 'Aseador', 'descripcion' => 'Consulta y confirmación de aseo de cabañas.',
+            ]);
+            $aseador->permisos()->syncWithoutDetaching(Permiso::whereIn('codigo', config('roles.aseador'))->pluck('id'));
         });
     }
 }

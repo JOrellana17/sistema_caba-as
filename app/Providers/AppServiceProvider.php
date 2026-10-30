@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Usuario;
+use Illuminate\Foundation\DevCommands;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -22,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->environment('local')) {
+            DevCommands::artisan('schedule:work', 'programador');
+        }
         Paginator::useBootstrapFive();
         foreach (config('permisos') as $modulo => $acciones) {
             foreach ($acciones as $accion) {

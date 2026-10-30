@@ -19,6 +19,9 @@ class ServicioCabanas
 
     public function guardar(Request $solicitud, array $datos, ?Cabana $cabana = null): Cabana
     {
+        if (array_key_exists('cantidad_camas', $datos)) {
+            $datos['camas'] = $datos['cantidad_camas'] === null ? null : array_values($datos['tipos_camas'] ?? []);
+        }
         $permiso = $cabana ? 'cabanas.editar' : 'cabanas.crear';
         $this->autorizar($solicitud, $permiso);
         $rutaImagen = null;
@@ -44,7 +47,11 @@ class ServicioCabanas
                 $registro->fill(Arr::only($datos, [
                     'nombre', 'descripcion', 'capacidad_base', 'capacidad_maxima',
                     'precio_base', 'precio_persona_adicional', 'precio_base_usd', 'precio_persona_adicional_usd', 'notas',
+                    'camas', 'tiene_refrigerador', 'tiene_aire_acondicionado',
                 ]));
+                if (is_array($registro->camas) && ! array_is_list($registro->camas)) {
+                    $registro->camas = array_map('intval', $registro->camas);
+                }
 
                 if (! $cabana) {
                     $registro->forceFill([
@@ -98,6 +105,9 @@ class ServicioCabanas
             }
             if ($registro->eventosCalendario()->where('bloquea', true)->exists()) {
                 throw ValidationException::withMessages(['cabana' => 'Hay bloqueos de calendario vigentes. Libéralos en su origen antes de eliminar la cabaña.']);
+            }
+            if ($registro->aseosPendientes()->exists()) {
+                throw ValidationException::withMessages(['cabana' => 'Confirma el aseo pendiente antes de eliminar la cabaña.']);
             }
             $registro->delete();
         });

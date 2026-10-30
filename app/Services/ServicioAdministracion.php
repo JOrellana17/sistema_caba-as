@@ -124,6 +124,9 @@ class ServicioAdministracion
                 abort_if($rol->codigo === 'administrador' && ! $actor->esAdministrador(), 403);
                 $this->comprobarPermisos($actor, $rol->permisos->modelKeys());
             }
+            if ($seleccion->contains('codigo', 'aseador') && ($seleccion->count() !== 1 || $usuario->permisos()->exists())) {
+                throw ValidationException::withMessages(['roles' => 'Aseador es un rol exclusivo. Retira primero los otros roles y permisos directos.']);
+            }
             $anteriores = $usuario->roles()->pluck('roles.id')->all();
             $usuario->roles()->sync($roles);
             $this->conservarAdministrador();
@@ -137,6 +140,9 @@ class ServicioAdministracion
             $usuario->refresh();
             $this->protegerCuenta($actor, $usuario);
             $this->comprobarPermisos($actor, $permisos);
+            if ($usuario->esAseador() && $permisos !== []) {
+                throw ValidationException::withMessages(['permisos' => 'Una cuenta Aseador solo utiliza los permisos de su rol.']);
+            }
             $anteriores = $usuario->permisos()->pluck('permisos.id')->all();
             $usuario->permisos()->sync($permisos);
             $this->auditoria->registrarCambio($solicitud, 'usuarios', 'permisos_asignados', $usuario->id, ['permisos' => $anteriores], ['permisos' => array_map('intval', $permisos)]);
@@ -151,6 +157,9 @@ class ServicioAdministracion
             if ($rol->codigo === 'administrador' || $datos['codigo'] === 'administrador') {
                 throw ValidationException::withMessages(['codigo' => 'El rol Administrador está protegido.']);
             }
+            if ($rol->codigo === 'aseador' || $datos['codigo'] === 'aseador') {
+                throw ValidationException::withMessages(['codigo' => 'El rol Aseador está protegido.']);
+            }
             $anteriores = $rol->toArray();
             $rol->fill($datos)->save();
             $this->auditoria->registrarCambio($solicitud, 'roles', $nuevo ? 'creado' : 'actualizado', $rol->id, $anteriores, $rol->toArray());
@@ -163,7 +172,7 @@ class ServicioAdministracion
     {
         $this->ejecutar($solicitud, 'roles.eliminar', function () use ($solicitud, $rol) {
             $rol->refresh();
-            if ($rol->codigo === 'administrador' || $rol->usuarios()->withTrashed()->exists()) {
+            if (in_array($rol->codigo, ['administrador', 'aseador'], true) || $rol->usuarios()->withTrashed()->exists()) {
                 throw ValidationException::withMessages(['rol' => 'No se puede eliminar un rol protegido o asignado a usuarios.']);
             }
             $this->auditoria->registrarCambio($solicitud, 'roles', 'eliminado', $rol->id, $rol->toArray());
@@ -177,6 +186,9 @@ class ServicioAdministracion
             $rol->refresh();
             if ($rol->codigo === 'administrador') {
                 throw ValidationException::withMessages(['rol' => 'Los permisos del rol Administrador están protegidos.']);
+            }
+            if ($rol->codigo === 'aseador') {
+                throw ValidationException::withMessages(['rol' => 'Los permisos del rol Aseador están protegidos.']);
             }
             $this->comprobarPermisos($actor, $permisos);
             // Tampoco permite retirar facultades superiores mediante la edición de un rol.

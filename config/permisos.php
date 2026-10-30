@@ -2,6 +2,7 @@
 
 return [
     'panel' => ['ver'],
+    'aseo' => ['ver', 'confirmar'],
     'cabanas' => ['ver', 'crear', 'editar', 'eliminar', 'restaurar', 'cambiar_estado', 'ver_disponibilidad'],
     'huespedes' => ['ver', 'buscar', 'crear', 'editar', 'eliminar', 'restaurar', 'cambiar_estado', 'cambiar_lista_negra', 'marcar_frecuente'],
     'reservaciones' => ['ver', 'crear', 'editar', 'eliminar', 'confirmar', 'cancelar', 'registrar_entrada', 'registrar_salida', 'marcar_no_presentado', 'autorizar_entrada_temprana', 'autorizar_salida_tardia', 'ver_disponibilidad', 'ver_calendario', 'gestionar_servicios'],

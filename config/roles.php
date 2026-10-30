@@ -10,5 +10,7 @@ return [
         'reservaciones.confirmar', 'reservaciones.cancelar',
         'reservaciones.registrar_entrada', 'reservaciones.registrar_salida', 'reservaciones.marcar_no_presentado',
         'reservaciones.ver_disponibilidad', 'reservaciones.ver_calendario',
+        'aseo.ver', 'aseo.confirmar',
     ],
+    'aseador' => ['aseo.ver', 'aseo.confirmar'],
 ];

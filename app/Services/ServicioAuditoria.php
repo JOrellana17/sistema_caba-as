@@ -15,7 +15,11 @@ class ServicioAuditoria
         $campos = ['nombre', 'usuario', 'activo', 'codigo', 'descripcion', 'roles', 'permisos', 'deleted_at'];
         if ($modulo === 'cabanas') {
             $campos = ['nombre', 'slug', 'capacidad_base', 'capacidad_maxima', 'precio_base',
-                'precio_persona_adicional', 'precio_base_usd', 'precio_persona_adicional_usd', 'estado', 'activa', 'imagen_principal', 'creado_por', 'deleted_at'];
+                'precio_persona_adicional', 'precio_base_usd', 'precio_persona_adicional_usd', 'estado', 'activa', 'imagen_principal', 'creado_por', 'deleted_at',
+                'camas', 'tiene_refrigerador', 'tiene_aire_acondicionado'];
+        }
+        if ($modulo === 'aseo') {
+            $campos = ['cabana_id', 'reservacion_id', 'iniciado_en', 'confirmado_en', 'confirmado_por'];
         }
         if ($modulo === 'reservaciones') {
             $campos = ['codigo', 'cabana_id', 'huesped_id', 'fecha_entrada', 'fecha_salida', 'entrada_prevista', 'salida_prevista',

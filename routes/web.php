@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AseoController;
 use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\AutenticacionController;
 use App\Http\Controllers\CabanaController;
@@ -29,6 +30,8 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware(['auth', 'usuario.activo', 'auth.session'])->group(function () {
+    Route::get('/aseo', [AseoController::class, 'listar'])->middleware('can:aseo.ver')->name('aseo.listar');
+    Route::put('/aseo/{aseo}/confirmar', [AseoController::class, 'confirmar'])->middleware(['can:aseo.ver', 'can:aseo.confirmar'])->name('aseo.confirmar');
     Route::get('/calendario', [CalendarioController::class, 'ver'])->middleware('can:reservaciones.ver_calendario')->name('calendario.ver');
     Route::get('/calendario/fuentes', [FuenteCalendarioController::class, 'listar'])->name('calendario.fuentes');
     Route::post('/calendario/fuentes', [FuenteCalendarioController::class, 'guardar'])->middleware('can:calendario.administrar_fuentes')->name('calendario.fuentes.guardar');

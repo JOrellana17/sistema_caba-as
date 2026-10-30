@@ -39,6 +39,11 @@ class Usuario extends Authenticatable
             && $this->roles()->where('codigo', 'administrador')->exists();
     }
 
+    public function esAseador(): bool
+    {
+        return $this->roles()->where('codigo', 'aseador')->exists();
+    }
+
     public function tienePermiso(string $codigo): bool
     {
         return $this->activo && ! $this->trashed() && (

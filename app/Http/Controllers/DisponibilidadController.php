@@ -17,7 +17,8 @@ class DisponibilidadController extends Controller
         if (isset($filtros['fecha_entrada'], $filtros['fecha_salida'], $filtros['cantidad_huespedes'])) {
             $cabanas = $this->disponibilidad->disponibles(
                 $filtros['fecha_entrada'], $filtros['fecha_salida'], (int) $filtros['cantidad_huespedes'],
-            )->select(['id', 'nombre', 'capacidad_base', 'capacidad_maxima'])
+            )->select(['id', 'nombre', 'capacidad_base', 'capacidad_maxima', 'camas', 'tiene_refrigerador', 'tiene_aire_acondicionado'])
+                ->withExists(['aseosPendientes as en_aseo'])
                 ->orderBy('nombre')->orderBy('id')->paginate(20)->withQueryString();
         }
 

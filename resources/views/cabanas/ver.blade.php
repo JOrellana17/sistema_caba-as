@@ -25,6 +25,8 @@
                 <dt class="col-sm-6">Persona adicional (USD)</dt><dd class="col-sm-6">{{ $cabana->precio_persona_adicional_usd ?? 'Sin configurar' }}</dd>
                 <dt class="col-sm-6">Creada por</dt><dd class="col-sm-6">{{ $cabana->creador?->nombre ?? 'Usuario no disponible' }}</dd>
             </dl>
+            <h2 class="h5 mt-3">Equipamiento</h2>
+            <x-equipamiento-cabana :cabana="$cabana" />
             <h2 class="h5 mt-3">Notas internas</h2>
             <p class="text-break mb-0">{{ $cabana->notas ?: 'Sin notas.' }}</p>
         </section>
@@ -33,6 +35,7 @@
         <section id="estado-operativo" class="card card-body mb-4">
             <h2 class="h5">Estado operativo</h2>
             <p>{{ \App\Models\Cabana::ESTADOS[$cabana->estado] }} · {{ $cabana->activa ? 'Activa' : 'Inactiva' }}</p>
+            <p><span class="badge {{ $cabana->en_aseo ? 'text-bg-warning' : 'text-bg-secondary' }}">{{ $cabana->en_aseo ? 'En aseo' : 'Sin aseo pendiente' }}</span></p>
             <p class="text-body-secondary">El estado operativo no confirma disponibilidad para unas fechas.</p>
             @can('cabanas.cambiar_estado')
                 <form method="POST" action="{{ route('cabanas.estado', $cabana) }}">

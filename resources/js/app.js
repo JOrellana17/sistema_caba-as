@@ -1,7 +1,9 @@
 import 'bootstrap';
 import { iniciarBuscadores } from './buscador-huesped';
+import { iniciarSelectoresCamas } from './selector-camas';
 
 iniciarBuscadores();
+iniciarSelectoresCamas();
 
 document.querySelector('[data-resumen-errores]')?.focus();
 

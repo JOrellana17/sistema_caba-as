@@ -61,6 +61,7 @@ class ServicioDisponibilidad
     {
         $consulta = $this->disponibles($fechaEntrada, $fechaSalida, $cantidadHuespedes, $excluida, $horaEntrada, $horaSalida, $eventoExcluido)->whereKey($cabana->getKey());
         if ($entradaReal) {
+            $consulta->whereDoesntHave('aseosPendientes');
             $consulta->whereDoesntHave('reservaciones', function (Builder $reservaciones) use ($excluida) {
                 $reservaciones->where('estado', 'hospedada');
                 if ($excluida?->exists) {
@@ -70,5 +71,19 @@ class ServicioDisponibilidad
         }
 
         return $consulta->exists();
+    }
+
+    public function exigirEntradaHabilitada(Cabana $cabana, ?Reservacion $excluida = null): void
+    {
+        if ($cabana->aseosPendientes()->exists()) {
+            throw ValidationException::withMessages(['cabana_id' => 'La cabaña está en aseo; confirma el aseo antes de registrar la entrada.']);
+        }
+        $hospedadas = $cabana->reservaciones()->where('estado', 'hospedada');
+        if ($excluida?->exists) {
+            $hospedadas->whereKeyNot($excluida->getKey());
+        }
+        if ($hospedadas->exists()) {
+            throw ValidationException::withMessages(['cabana_id' => 'La cabaña tiene otra estancia en estado Hospedada. Registra su salida y confirma el aseo antes de registrar una nueva entrada.']);
+        }
     }
 }

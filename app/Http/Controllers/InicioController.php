@@ -4,13 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Reservacion;
 use App\Services\ServicioDisponibilidad;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class InicioController extends Controller
 {
-    public function ver(Request $solicitud): View
+    public function ver(Request $solicitud): View|RedirectResponse
     {
+        if ($solicitud->user()->esAseador()) {
+            return redirect()->route('aseo.listar');
+        }
         $reservaciones = null;
         if ($solicitud->user()->can('reservaciones.ver')) {
             $relaciones = ['cabana:id,nombre,deleted_at'];

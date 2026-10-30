@@ -65,6 +65,7 @@ class CabanaController extends Controller
     public function ver(Cabana $cabana): View
     {
         $cabana->load('creador:id,nombre,deleted_at');
+        $cabana->loadExists(['aseosPendientes as en_aseo']);
 
         return view('cabanas.ver', compact('cabana'));
     }

@@ -23,6 +23,26 @@
         <div class="col-md-6"><x-campo nombre="precio_persona_adicional_usd" etiqueta="Precio por persona adicional (USD, opcional)" tipo="number" :valor="$cabana->precio_persona_adicional_usd" min="0" max="9999999999.99" step="0.01" /></div>
     </div>
     <p class="form-text">Configura ambas tarifas en dólares para habilitar USD. No hay conversión entre monedas.</p>
+    <fieldset class="border rounded p-3 mb-4" data-equipamiento>
+        <legend class="float-none w-auto px-2 h5">Equipamiento</legend>
+        <x-selector-camas :cabana="$cabana" />
+        @error('camas')<p class="text-danger">{{ $message }}</p>@enderror
+        <div class="row">
+            @foreach (['tiene_refrigerador' => 'Refrigerador', 'tiene_aire_acondicionado' => 'Aire acondicionado'] as $campo => $etiqueta)
+                @php($valorEquipo = old($campo, $cabana->$campo))
+                <div class="col-md-6 mb-2">
+                    <label for="{{ $campo }}" class="form-label">{{ $etiqueta }}</label>
+                    <select id="{{ $campo }}" name="{{ $campo }}" class="form-select {{ $errors->has($campo) ? 'is-invalid' : '' }}"
+                        @if ($errors->has($campo)) aria-invalid="true" aria-describedby="error-{{ $campo }}" @endif>
+                        <option value="" @selected($valorEquipo === null || $valorEquipo === '')>Sin registrar</option>
+                        <option value="1" @selected(in_array($valorEquipo, [true, 1, '1'], true))>Sí</option>
+                        <option value="0" @selected(in_array($valorEquipo, [false, 0, '0'], true))>No</option>
+                    </select>
+                    @if ($errors->has($campo))<div id="error-{{ $campo }}" class="invalid-feedback">{{ $errors->first($campo) }}</div>@endif
+                </div>
+            @endforeach
+        </div>
+    </fieldset>
     @if (! $cabana->exists)
         <x-estado-cabana :cabana="$cabana" />
     @else

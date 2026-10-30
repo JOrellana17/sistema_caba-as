@@ -21,6 +21,12 @@ class AutenticacionController extends Controller
     {
         $autenticacion->iniciar($solicitud);
 
+        if ($solicitud->user()->esAseador()) {
+            $solicitud->session()->forget('url.intended');
+
+            return redirect()->route('aseo.listar');
+        }
+
         return redirect()->intended(route('inicio'));
     }
 

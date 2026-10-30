@@ -12,9 +12,11 @@
 <tr><td>{{ $rol->codigo }}</td><td>{{ $rol->nombre }}</td><td>{{ $rol->descripcion ?? 'Sin descripción' }}</td>
 <td><div class="d-flex flex-wrap gap-2">
 <a class="btn btn-outline-primary btn-sm" href="{{ route('roles.ver', $rol) }}">Ver permisos</a>
+@if (! in_array($rol->codigo, ['administrador', 'aseador'], true))
 @can('roles.editar')<a class="btn btn-outline-secondary btn-sm" href="{{ route('roles.editar', $rol) }}">Editar</a>@endcan
+@endif
 @can('roles.eliminar')
-@if ($rol->codigo !== 'administrador')
+@if (! in_array($rol->codigo, ['administrador', 'aseador'], true))
 <form method="POST" action="{{ route('roles.eliminar', $rol) }}" data-confirmar="¿Eliminar este rol?">@csrf @method('DELETE')
 <button class="btn btn-outline-danger btn-sm" type="submit">Eliminar</button></form>
 @endif
