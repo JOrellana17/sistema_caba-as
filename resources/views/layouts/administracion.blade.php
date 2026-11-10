@@ -1,42 +1,88 @@
 @extends('layouts.base')
 @section('pagina')
-<header class="navbar navbar-dark cabecera px-3 px-lg-4 py-3">
-    <div class="container-fluid gap-3 p-0">
-        <a class="navbar-brand d-flex align-items-center gap-2 m-0" href="{{ route('inicio') }}">
-            <span class="marca marca-pequena" aria-hidden="true">CE</span>
+@php
+    $usuario = auth()->user();
+    $usaDisponibilidadReservaciones = $usuario->can('reservaciones.ver_disponibilidad');
+    $gruposMenu = [
+        'Operación diaria' => [
+            'reservaciones' => ['Reservaciones', 'reservaciones.listar', 'reservaciones.ver'],
+            'calendario' => ['Calendario', 'calendario.ver', 'reservaciones.ver_calendario'],
+            'disponibilidad' => ['Disponibilidad',
+                $usaDisponibilidadReservaciones ? 'reservaciones.disponibilidad' : 'cabanas.disponibilidad',
+                $usaDisponibilidadReservaciones ? 'reservaciones.ver_disponibilidad' : 'cabanas.ver_disponibilidad'],
+            'huespedes' => ['Huéspedes', 'huespedes.listar', 'huespedes.ver'],
+            'buscador' => ['Buscar cliente', 'huespedes.buscador', 'huespedes.buscar'],
+            'cabanas' => ['Cabañas', 'cabanas.listar', 'cabanas.ver'],
+            'aseo' => ['Aseo', 'aseo.listar', 'aseo.ver'],
+        ],
+        'Administración' => [
+            'usuarios' => ['Usuarios', 'usuarios.listar', 'usuarios.ver'],
+            'roles' => ['Roles', 'roles.listar', 'roles.ver'],
+            'permisos' => ['Permisos', 'permisos.listar', 'permisos.ver'],
+            'auditoria' => ['Auditoría', 'auditoria.listar', 'auditoria.ver'],
+        ],
+    ];
+    $moduloActual = match (true) {
+        request()->routeIs('reservaciones.disponibilidad', 'cabanas.disponibilidad') => 'disponibilidad',
+        request()->routeIs('huespedes.buscador') => 'buscador',
+        default => \Illuminate\Support\Str::before(request()->route()?->getName() ?? '', '.'),
+    };
+@endphp
+<div class="aplicacion-marco">
+    <header class="cabecera-movil d-lg-none">
+        <a class="marca-enlace" href="{{ route('inicio') }}">
+            <x-marca-cabana />
             <span>Cabañas El Capitán</span>
         </a>
-        <div class="d-flex align-items-center flex-wrap gap-3 text-white">
-            <span>{{ auth()->user()->nombre }}</span>
-            <form method="POST" action="{{ route('sesion.cerrar') }}">
-                @csrf
-                <button type="submit" class="btn btn-outline-light btn-sm">Cerrar sesión</button>
-            </form>
+        <button class="boton-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#menu-administracion"
+            aria-controls="menu-administracion" aria-label="Abrir menú">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+    </header>
+
+    <aside class="offcanvas-lg offcanvas-start barra-lateral" tabindex="-1" id="menu-administracion" aria-labelledby="titulo-menu">
+        <div class="offcanvas-header">
+            <a class="marca-enlace" href="{{ route('inicio') }}">
+                <x-marca-cabana />
+                <span id="titulo-menu">Cabañas El Capitán</span>
+            </a>
+            <button class="btn-close btn-close-white d-lg-none" type="button" data-bs-dismiss="offcanvas"
+                data-bs-target="#menu-administracion" aria-label="Cerrar menú"></button>
         </div>
-    </div>
-</header>
-<nav class="bg-white border-bottom" aria-label="Administración">
-    <div class="container d-flex flex-wrap gap-2 py-2">
-        @if (! auth()->user()->esAseador())<a class="btn btn-sm btn-outline-secondary" href="{{ route('inicio') }}">Inicio</a>@endif
-        @can('cabanas.ver')<a class="btn btn-sm btn-outline-primary" href="{{ route('cabanas.listar') }}">Cabañas</a>@endcan
-        @can('reservaciones.ver_calendario')<a class="btn btn-sm btn-outline-primary" href="{{ route('calendario.ver') }}">Calendario</a>@endcan
-        @can('reservaciones.ver')<a class="btn btn-sm btn-outline-primary" href="{{ route('reservaciones.listar') }}">Reservaciones</a>@endcan
-        @can('aseo.ver')<a class="btn btn-sm btn-outline-primary" href="{{ route('aseo.listar') }}">Aseo</a>@endcan
-        @can('reservaciones.ver_disponibilidad')
-            <a class="btn btn-sm btn-outline-primary" href="{{ route('reservaciones.disponibilidad') }}">Disponibilidad</a>
-        @elsecan('cabanas.ver_disponibilidad')
-            <a class="btn btn-sm btn-outline-primary" href="{{ route('cabanas.disponibilidad') }}">Disponibilidad</a>
-        @endcan
-        @can('huespedes.ver')<a class="btn btn-sm btn-outline-primary" href="{{ route('huespedes.listar') }}">Huéspedes</a>@endcan
-        @can('huespedes.buscar')<a class="btn btn-sm btn-outline-primary" href="{{ route('huespedes.buscador') }}">Buscar cliente</a>@endcan
-        @can('usuarios.ver')<a class="btn btn-sm btn-outline-primary" href="{{ route('usuarios.listar') }}">Usuarios</a>@endcan
-        @can('roles.ver')<a class="btn btn-sm btn-outline-primary" href="{{ route('roles.listar') }}">Roles</a>@endcan
-        @can('permisos.ver')<a class="btn btn-sm btn-outline-primary" href="{{ route('permisos.listar') }}">Permisos</a>@endcan
-        @can('auditoria.ver')<a class="btn btn-sm btn-outline-primary" href="{{ route('auditoria.listar') }}">Auditoría</a>@endcan
-    </div>
-</nav>
-<main id="contenido" class="container py-4 py-lg-5">
-    <x-mensajes />
-    @yield('contenido')
-</main>
+        <div class="offcanvas-body">
+            <nav class="menu-modulos" aria-label="Administración">
+                @unless ($usuario->esAseador())
+                    <a class="menu-enlace" href="{{ route('inicio') }}" @if (request()->routeIs('inicio')) aria-current="page" @endif>Inicio</a>
+                @endunless
+                @foreach ($gruposMenu as $titulo => $enlaces)
+                    @canany(array_column($enlaces, 2))
+                        <div class="menu-grupo">
+                            <p class="menu-titulo">{{ $titulo }}</p>
+                            @foreach ($enlaces as $modulo => [$etiqueta, $ruta, $permiso])
+                                @can($permiso)
+                                    <a class="menu-enlace" href="{{ route($ruta) }}"
+                                        @if ($moduloActual === $modulo) aria-current="{{ request()->routeIs($ruta) ? 'page' : 'true' }}" @endif>{{ $etiqueta }}</a>
+                                @endcan
+                            @endforeach
+                        </div>
+                    @endcanany
+                @endforeach
+            </nav>
+            <div class="menu-cuenta">
+                <p class="mb-1 fw-semibold">{{ $usuario->nombre }}</p>
+                <form method="POST" action="{{ route('sesion.cerrar') }}">
+                    @csrf
+                    <button type="submit" class="menu-salir">Cerrar sesión</button>
+                </form>
+            </div>
+        </div>
+    </aside>
+
+    <main id="contenido" class="aplicacion-contenido">
+        <x-mensajes />
+        @yield('contenido')
+    </main>
+</div>
 @endsection

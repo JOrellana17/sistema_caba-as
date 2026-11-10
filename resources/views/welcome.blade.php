@@ -3,7 +3,7 @@
 @section('pagina')
 <main id="contenido" class="container acceso-contenedor py-5">
     <section class="card border-0 shadow-sm rounded-4 p-4 p-sm-5 text-center">
-        <span class="marca mx-auto mb-4" aria-hidden="true">CE</span>
+        <x-marca-cabana class="marca-portada mx-auto mb-4" />
         <h1 class="h2">Cabañas El Capitán</h1>
         <p class="text-body-secondary mb-4">Sistema administrativo</p>
         @auth
