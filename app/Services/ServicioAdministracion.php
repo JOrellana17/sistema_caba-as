@@ -85,6 +85,19 @@ class ServicioAdministracion
         });
     }
 
+    public function desbloquear(Request $solicitud, Usuario $usuario): void
+    {
+        $this->ejecutar($solicitud, 'usuarios.cambiar_estado', function (Usuario $actor) use ($solicitud, $usuario) {
+            $usuario->refresh();
+            $this->protegerCuenta($actor, $usuario);
+            $anteriores = ['bloqueado_at' => $usuario->bloqueado_at, 'intentos_fallidos' => $usuario->intentos_fallidos];
+            $usuario->bloqueado_at = null;
+            $usuario->intentos_fallidos = 0;
+            $usuario->save();
+            $this->auditoria->registrarCambio($solicitud, 'usuarios', 'cuenta_desbloqueada', $usuario->id, $anteriores, ['bloqueado_at' => null, 'intentos_fallidos' => 0]);
+        });
+    }
+
     public function eliminarUsuario(Request $solicitud, Usuario $usuario): void
     {
         $this->ejecutar($solicitud, 'usuarios.eliminar', function (Usuario $actor) use ($solicitud, $usuario) {
@@ -106,6 +119,9 @@ class ServicioAdministracion
             $this->protegerCuenta($actor, $usuario);
             $usuario->contrasena = $contrasena;
             $usuario->remember_token = Str::random(60);
+            // Restablecer la contraseña también retira un bloqueo por intentos fallidos.
+            $usuario->bloqueado_at = null;
+            $usuario->intentos_fallidos = 0;
             $usuario->save();
             $this->auditoria->registrarCambio($solicitud, 'usuarios', 'contrasena_restablecida', $usuario->id);
         });

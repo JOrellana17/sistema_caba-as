@@ -38,4 +38,15 @@ class UsuarioFactory extends Factory
             'activo' => false,
         ]);
     }
+
+    /**
+     * Representa una cuenta bloqueada por intentos fallidos de acceso.
+     */
+    public function bloqueado(): static
+    {
+        return $this->state(fn (array $atributos) => [
+            'intentos_fallidos' => Usuario::MAXIMO_INTENTOS,
+            'bloqueado_at' => now(),
+        ]);
+    }
 }
