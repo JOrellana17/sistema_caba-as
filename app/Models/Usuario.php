@@ -19,6 +19,9 @@ class Usuario extends Authenticatable
 
     use SoftDeletes;
 
+    /** Cantidad de intentos fallidos que bloquean la cuenta. */
+    public const MAXIMO_INTENTOS = 3;
+
     protected $table = 'usuarios';
 
     protected $authPasswordName = 'contrasena';
@@ -44,6 +47,14 @@ class Usuario extends Authenticatable
         return $this->roles()->where('codigo', 'aseador')->exists();
     }
 
+    /**
+     * Indica si la cuenta quedó bloqueada por intentos fallidos de acceso.
+     */
+    public function estaBloqueado(): bool
+    {
+        return $this->bloqueado_at !== null;
+    }
+
     public function tienePermiso(string $codigo): bool
     {
         return $this->activo && ! $this->trashed() && (
@@ -63,6 +74,8 @@ class Usuario extends Authenticatable
             'correo_verificado_at' => 'datetime',
             'contrasena' => 'hashed',
             'activo' => 'boolean',
+            'intentos_fallidos' => 'integer',
+            'bloqueado_at' => 'datetime',
         ];
     }
 }

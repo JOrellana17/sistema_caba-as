@@ -14,7 +14,7 @@
                 @forelse ($usuarios as $usuario)
                     <tr>
                         <td>{{ $usuario->nombre }}</td><td>{{ $usuario->usuario ?? 'Sin asignar' }}</td>
-                        <td><span class="badge {{ $usuario->activo ? 'text-bg-success' : 'text-bg-secondary' }}">{{ $usuario->activo ? 'Activo' : 'Inactivo' }}</span></td>
+                        <td><span class="badge {{ $usuario->activo ? 'text-bg-success' : 'text-bg-secondary' }}">{{ $usuario->activo ? 'Activo' : 'Inactivo' }}</span>@if ($usuario->estaBloqueado()) <span class="badge text-bg-warning">Bloqueado</span>@endif</td>
                         <td>{{ $usuario->roles->pluck('nombre')->join(', ') ?: 'Sin roles' }}</td>
                         <td><a class="btn btn-outline-primary btn-sm" href="{{ route('usuarios.ver', $usuario) }}">Ver cuenta</a></td>
                     </tr>

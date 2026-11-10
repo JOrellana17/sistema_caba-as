@@ -108,6 +108,7 @@ Route::middleware(['auth', 'usuario.activo', 'auth.session'])->group(function ()
     Route::put('/permisos/{permiso}', [PermisoController::class, 'actualizar'])->middleware('can:permisos.editar')->name('permisos.actualizar');
     Route::delete('/permisos/{permiso}', [PermisoController::class, 'eliminar'])->middleware('can:permisos.eliminar')->name('permisos.eliminar');
     Route::put('/usuarios/{usuario}/estado', [UsuarioController::class, 'estado'])->middleware('can:usuarios.cambiar_estado')->name('usuarios.estado');
+    Route::put('/usuarios/{usuario}/desbloquear', [UsuarioController::class, 'desbloquear'])->middleware('can:usuarios.cambiar_estado')->name('usuarios.desbloquear');
     Route::put('/usuarios/{usuario}/contrasena', [UsuarioController::class, 'contrasena'])->middleware('can:usuarios.restablecer_contrasena')->name('usuarios.contrasena');
     Route::put('/usuarios/{usuario}/roles', [UsuarioController::class, 'roles'])->middleware('can:usuarios.gestionar_roles')->name('usuarios.roles');
     Route::put('/usuarios/{usuario}/permisos', [UsuarioController::class, 'permisos'])->middleware('can:usuarios.gestionar_permisos')->name('usuarios.permisos');
