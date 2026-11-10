@@ -11,14 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('eventos_calendario', function (Blueprint $table) {
+        // SQLite compara en binario por defecto; ascii_bin es de MySQL.
+        $intercalacionIdentidad = in_array(Schema::getConnection()->getDriverName(), ['mysql', 'mariadb'], true)
+            ? 'ascii_bin'
+            : null;
+
+        Schema::create('eventos_calendario', function (Blueprint $table) use ($intercalacionIdentidad) {
             $table->id();
             $table->foreignId('fuente_id')->nullable()->constrained('fuentes_calendario')->restrictOnDelete();
             $table->foreignId('cabana_id')->constrained('cabanas')->restrictOnDelete();
             $table->foreignId('reservacion_id')->nullable()->unique()->constrained('reservaciones')->restrictOnDelete();
             $table->string('origen', 20);
             $table->text('uid');
-            $table->char('identidad', 64)->collation('ascii_bin');
+            $table->char('identidad', 64)->collation($intercalacionIdentidad);
             $table->dateTime('inicio');
             $table->dateTime('fin');
             $table->boolean('fecha_completa')->default(false);

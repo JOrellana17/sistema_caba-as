@@ -66,6 +66,13 @@ class UsuarioController extends Controller
         return $this->volver($solicitud);
     }
 
+    public function desbloquear(Request $solicitud, Usuario $usuario): RedirectResponse
+    {
+        $this->administracion->desbloquear($solicitud, $usuario);
+
+        return $this->volver($solicitud);
+    }
+
     public function contrasena(ContrasenaUsuarioRequest $solicitud, Usuario $usuario): RedirectResponse
     {
         $this->administracion->cambiarContrasena($solicitud, $usuario, $solicitud->validated('contrasena'));

@@ -10,17 +10,22 @@ return new class extends Migration
     {
         // La identidad ya está normalizada en mayúsculas sin separadores.
         // Ignorar tildes solo corresponde al nombre, no al documento.
-        Schema::table('huespedes', function (Blueprint $table) {
-            $table->string('identidad_busqueda', 160)->nullable()->collation('utf8mb4_bin')->change();
-        });
+        // SQLite compara en binario por defecto; la intercalación es de MySQL.
+        if (in_array(Schema::getConnection()->getDriverName(), ['mysql', 'mariadb'], true)) {
+            Schema::table('huespedes', function (Blueprint $table) {
+                $table->string('identidad_busqueda', 160)->nullable()->collation('utf8mb4_bin')->change();
+            });
+        }
     }
 
     public function down(): void
     {
         // Puede rechazarse si hay documentos que solo se distinguen por tildes.
         // No elimina ni transforma las identidades para forzar la reversión.
-        Schema::table('huespedes', function (Blueprint $table) {
-            $table->string('identidad_busqueda', 160)->nullable()->collation('utf8mb4_unicode_ci')->change();
-        });
+        if (in_array(Schema::getConnection()->getDriverName(), ['mysql', 'mariadb'], true)) {
+            Schema::table('huespedes', function (Blueprint $table) {
+                $table->string('identidad_busqueda', 160)->nullable()->collation('utf8mb4_unicode_ci')->change();
+            });
+        }
     }
 };

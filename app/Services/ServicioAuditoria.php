@@ -12,7 +12,7 @@ class ServicioAuditoria
 {
     public function registrarCambio(Request $solicitud, string $modulo, string $accion, int $registroId, array $anteriores = [], array $nuevos = []): void
     {
-        $campos = ['nombre', 'usuario', 'activo', 'codigo', 'descripcion', 'roles', 'permisos', 'deleted_at'];
+        $campos = ['nombre', 'usuario', 'activo', 'intentos_fallidos', 'bloqueado_at', 'codigo', 'descripcion', 'roles', 'permisos', 'deleted_at'];
         if ($modulo === 'cabanas') {
             $campos = ['nombre', 'slug', 'capacidad_base', 'capacidad_maxima', 'precio_base',
                 'precio_persona_adicional', 'precio_base_usd', 'precio_persona_adicional_usd', 'estado', 'activa', 'imagen_principal', 'creado_por', 'deleted_at',

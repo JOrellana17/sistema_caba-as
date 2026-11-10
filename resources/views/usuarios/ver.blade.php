@@ -48,6 +48,14 @@
 @endcan
 <section class="col-12 col-lg-6"><div class="card border-0 shadow-sm h-100"><div class="card-body">
     <h2 class="h5">Estado y acceso</h2>
+    @if ($usuario->estaBloqueado())
+        <p class="text-danger mb-2">Bloqueada por intentos fallidos desde el {{ $usuario->bloqueado_at->format('d/m/Y H:i') }}.</p>
+        @can('usuarios.cambiar_estado')
+            <form method="POST" action="{{ route('usuarios.desbloquear', $usuario) }}" class="mb-4">@csrf @method('PUT')
+                <button type="submit" class="btn btn-outline-warning">Desbloquear cuenta</button>
+            </form>
+        @endcan
+    @endif
     @can('usuarios.cambiar_estado')
         <form method="POST" action="{{ route('usuarios.estado', $usuario) }}" class="mb-4">@csrf @method('PUT')
             <input type="hidden" name="activo" value="{{ $usuario->activo ? 0 : 1 }}">
