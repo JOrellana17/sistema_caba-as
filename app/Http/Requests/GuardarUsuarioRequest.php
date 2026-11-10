@@ -16,6 +16,7 @@ class GuardarUsuarioRequest extends SolicitudAdministrativa
             'usuario' => ['required', 'string', 'max:100', 'regex:/^[a-z0-9._-]+$/', Rule::unique('usuarios')->ignore($usuario)],
             'correo' => ['nullable', 'email', 'max:255', Rule::unique('usuarios')->ignore($usuario)],
             'contrasena' => $usuario ? ['prohibited'] : ['required', 'string', 'confirmed', new ContrasenaSegura],
+            'pin' => $usuario ? ['prohibited'] : ['nullable', 'string', 'regex:/^[0-9]{6}$/', 'confirmed'],
             'activo' => ['prohibited'],
             'roles' => ['prohibited'],
             'permisos' => ['prohibited'],

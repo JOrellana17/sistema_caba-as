@@ -7,6 +7,7 @@ use App\Http\Requests\AsignarRolesRequest;
 use App\Http\Requests\ContrasenaUsuarioRequest;
 use App\Http\Requests\EstadoUsuarioRequest;
 use App\Http\Requests\GuardarUsuarioRequest;
+use App\Http\Requests\PinUsuarioRequest;
 use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\Usuario;
@@ -76,6 +77,13 @@ class UsuarioController extends Controller
     public function contrasena(ContrasenaUsuarioRequest $solicitud, Usuario $usuario): RedirectResponse
     {
         $this->administracion->cambiarContrasena($solicitud, $usuario, $solicitud->validated('contrasena'));
+
+        return $this->volver($solicitud);
+    }
+
+    public function pin(PinUsuarioRequest $solicitud, Usuario $usuario): RedirectResponse
+    {
+        $this->administracion->cambiarPin($solicitud, $usuario, $solicitud->boolean('retirar_pin') ? null : $solicitud->validated('pin'));
 
         return $this->volver($solicitud);
     }

@@ -14,7 +14,7 @@ use Illuminate\Validation\ValidationException;
 
 class ServicioAdministracion
 {
-    public function __construct(private ServicioAuditoria $auditoria) {}
+    public function __construct(private ServicioAuditoria $auditoria, private ServicioSesiones $sesiones) {}
 
     private function ejecutar(Request $solicitud, string $permiso, Closure $operacion): mixed
     {
@@ -62,6 +62,9 @@ class ServicioAdministracion
             $this->protegerCuenta($actor, $usuario);
             $anteriores = $usuario->toArray();
             $usuario->fill($datos);
+            if ($nuevo && ! empty($datos['pin'])) {
+                $usuario->pin = $datos['pin'];
+            }
             $usuario->save();
             $this->auditoria->registrarCambio($solicitud, 'usuarios', $nuevo ? 'creado' : 'actualizado', $usuario->id, $anteriores, $usuario->toArray());
 
@@ -78,6 +81,8 @@ class ServicioAdministracion
             $usuario->activo = $activo;
             if (! $activo) {
                 $usuario->remember_token = Str::random(60);
+                $usuario->version_credenciales++;
+                $this->sesiones->revocar($usuario, 'Cuenta desactivada');
             }
             $usuario->save();
             $this->conservarAdministrador();
@@ -104,6 +109,8 @@ class ServicioAdministracion
             $usuario->refresh();
             $this->protegerCuenta($actor, $usuario);
             $usuario->activo = false;
+            $usuario->version_credenciales++;
+            $this->sesiones->revocar($usuario, 'Cuenta eliminada');
             $usuario->remember_token = Str::random(60);
             $usuario->save();
             $usuario->delete();
@@ -118,12 +125,29 @@ class ServicioAdministracion
             $usuario->refresh();
             $this->protegerCuenta($actor, $usuario);
             $usuario->contrasena = $contrasena;
+            $usuario->pin = null;
+            $usuario->version_credenciales++;
+            $this->sesiones->revocar($usuario, 'Contraseña restablecida');
             $usuario->remember_token = Str::random(60);
             // Restablecer la contraseña también retira un bloqueo por intentos fallidos.
             $usuario->bloqueado_at = null;
             $usuario->intentos_fallidos = 0;
             $usuario->save();
             $this->auditoria->registrarCambio($solicitud, 'usuarios', 'contrasena_restablecida', $usuario->id);
+        });
+    }
+
+    public function cambiarPin(Request $solicitud, Usuario $usuario, ?string $pin): void
+    {
+        $this->ejecutar($solicitud, 'usuarios.restablecer_pin', function (Usuario $actor) use ($solicitud, $usuario, $pin) {
+            $usuario->refresh();
+            $this->protegerCuenta($actor, $usuario);
+            $usuario->pin = $pin;
+            $usuario->remember_token = Str::random(60);
+            $usuario->version_credenciales++;
+            $usuario->save();
+            $this->sesiones->revocar($usuario, 'PIN restablecido');
+            $this->auditoria->registrarCambio($solicitud, 'usuarios', 'pin_restablecido', $usuario->id);
         });
     }
 

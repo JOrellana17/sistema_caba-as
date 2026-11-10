@@ -72,6 +72,11 @@
             </nav>
             <div class="menu-cuenta">
                 <p class="mb-1 fw-semibold">{{ $usuario->nombre }}</p>
+                <a class="menu-enlace" href="{{ route('perfil.ver') }}">Mi perfil</a>
+                <a class="menu-enlace" href="{{ route('sesiones.propias') }}">Mis sesiones</a>
+                @can('sesiones.ver_todas')
+                    <a class="menu-enlace" href="{{ route('sesiones.todas') }}">Historial de sesiones</a>
+                @endcan
                 <form method="POST" action="{{ route('sesion.cerrar') }}">
                     @csrf
                     <button type="submit" class="menu-salir">Cerrar sesión</button>

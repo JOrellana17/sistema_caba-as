@@ -5,16 +5,20 @@ use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\AutenticacionController;
 use App\Http\Controllers\CabanaController;
 use App\Http\Controllers\CalendarioController;
+use App\Http\Controllers\CredencialesController;
 use App\Http\Controllers\DisponibilidadController;
 use App\Http\Controllers\EnlaceCalendarioController;
 use App\Http\Controllers\EventoCalendarioController;
 use App\Http\Controllers\FuenteCalendarioController;
 use App\Http\Controllers\HuespedController;
 use App\Http\Controllers\InicioController;
+use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PermisoController;
 use App\Http\Controllers\ReservacionController;
 use App\Http\Controllers\RolController;
+use App\Http\Controllers\SesionUsuarioController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Middleware\RegistrarSesionUsuario;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -29,7 +33,13 @@ Route::middleware('guest')->group(function () {
     Route::post('/iniciar-sesion', [AutenticacionController::class, 'iniciar'])->name('sesion.iniciar');
 });
 
-Route::middleware(['auth', 'usuario.activo', 'auth.session'])->group(function () {
+Route::middleware(['auth', 'usuario.activo', RegistrarSesionUsuario::class, 'auth.session'])->group(function () {
+    Route::get('/mi-perfil', [PerfilController::class, 'ver'])->name('perfil.ver');
+    Route::put('/mi-perfil/credenciales', [PerfilController::class, 'cambiar'])->middleware('throttle:5,1')->name('perfil.credenciales');
+    Route::post('/credenciales/generar', [CredencialesController::class, 'generar'])->middleware('throttle:30,1')->name('credenciales.generar');
+    Route::get('/mis-sesiones', [SesionUsuarioController::class, 'propias'])->name('sesiones.propias');
+    Route::get('/sesiones', [SesionUsuarioController::class, 'todas'])->middleware('can:sesiones.ver_todas')->name('sesiones.todas');
+    Route::put('/usuarios/{usuario}/pin', [UsuarioController::class, 'pin'])->middleware(['can:usuarios.restablecer_pin', 'throttle:5,1'])->name('usuarios.pin');
     Route::get('/aseo', [AseoController::class, 'listar'])->middleware('can:aseo.ver')->name('aseo.listar');
     Route::put('/aseo/{aseo}/confirmar', [AseoController::class, 'confirmar'])->middleware(['can:aseo.ver', 'can:aseo.confirmar'])->name('aseo.confirmar');
     Route::get('/calendario', [CalendarioController::class, 'ver'])->middleware('can:reservaciones.ver_calendario')->name('calendario.ver');

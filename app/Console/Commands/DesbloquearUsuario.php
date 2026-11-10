@@ -36,7 +36,7 @@ class DesbloquearUsuario extends Command
             $usuario->intentos_fallidos = 0;
             $usuario->save();
             RegistroAuditoria::create([
-                'usuario_id' => $usuario->id,
+                'usuario_id' => null,
                 'modulo' => 'usuarios',
                 'accion' => 'cuenta_desbloqueada_por_consola',
                 'registro_id' => $usuario->id,

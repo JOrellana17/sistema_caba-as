@@ -1,4 +1,5 @@
 import 'bootstrap';
+import './credenciales';
 import { iniciarBuscadores } from './buscador-huesped';
 import { iniciarSelectoresCamas } from './selector-camas';
 

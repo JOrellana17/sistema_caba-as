@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 #[Fillable(['nombre', 'usuario', 'correo', 'contrasena'])]
-#[Hidden(['contrasena', 'remember_token'])]
+#[Hidden(['contrasena', 'pin', 'remember_token'])]
 class Usuario extends Authenticatable
 {
     /** @use HasFactory<UsuarioFactory> */
@@ -24,7 +25,14 @@ class Usuario extends Authenticatable
 
     protected $table = 'usuarios';
 
+    protected $attributes = ['version_credenciales' => 0];
+
     protected $authPasswordName = 'contrasena';
+
+    public function sesiones(): HasMany
+    {
+        return $this->hasMany(SesionUsuario::class);
+    }
 
     public function roles(): BelongsToMany
     {
@@ -57,6 +65,10 @@ class Usuario extends Authenticatable
 
     public function tienePermiso(string $codigo): bool
     {
+        if (in_array($codigo, ['usuarios.eliminar', 'cabanas.eliminar', 'huespedes.eliminar', 'reservaciones.eliminar', 'sesiones.ver_todas'], true) && ! $this->esAdministrador()) {
+            return false;
+        }
+
         return $this->activo && ! $this->trashed() && (
             $this->permisos()->where('codigo', $codigo)->exists()
             || $this->roles()->whereHas('permisos', fn ($consulta) => $consulta->where('codigo', $codigo))->exists()
@@ -73,6 +85,8 @@ class Usuario extends Authenticatable
         return [
             'correo_verificado_at' => 'datetime',
             'contrasena' => 'hashed',
+            'pin' => 'hashed',
+            'version_credenciales' => 'integer',
             'activo' => 'boolean',
             'intentos_fallidos' => 'integer',
             'bloqueado_at' => 'datetime',

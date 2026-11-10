@@ -27,6 +27,8 @@ abstract class SolicitudAdministrativa extends FormRequest
             'exists' => 'Uno de los registros seleccionados ya no existe.',
             'distinct' => 'La selección contiene registros repetidos.',
             'confirmed' => 'Las contraseñas no coinciden.',
+            'pin.confirmed' => 'Los PIN no coinciden.',
+            'pin.regex' => 'El PIN debe contener exactamente seis dígitos.',
             'prohibited' => 'El campo :attribute se administra mediante su operación y permiso específicos.',
         ];
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\IniciarSesionRequest;
 use App\Services\ServicioAuditoria;
 use App\Services\ServicioAutenticacion;
+use App\Services\ServicioSesiones;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,9 +31,10 @@ class AutenticacionController extends Controller
         return redirect()->intended(route('inicio'));
     }
 
-    public function cerrar(Request $solicitud, ServicioAuditoria $auditoria): RedirectResponse
+    public function cerrar(Request $solicitud, ServicioAuditoria $auditoria, ServicioSesiones $sesiones): RedirectResponse
     {
         $usuario = $solicitud->user();
+        $sesiones->cerrar($solicitud);
         Auth::logout();
         $solicitud->session()->invalidate();
         $solicitud->session()->regenerateToken();

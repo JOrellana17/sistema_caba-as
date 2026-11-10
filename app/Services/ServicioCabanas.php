@@ -70,6 +70,22 @@ class ServicioCabanas
                 }
                 $this->auditoria->registrarCambio($solicitud, 'cabanas', $cabana ? 'actualizado' : 'creado', $registro->id, $anteriores, $registro->toArray());
 
+                $anterior = $anteriores['imagen_principal'] ?? null;
+                if ($rutaImagen && $anterior && $anterior !== $rutaImagen) {
+                    DB::afterCommit(function () use ($anterior) {
+                        try {
+                            if (str_starts_with($anterior, 'imagenes/') && ! str_contains($anterior, '..')
+                                && ! Cabana::withTrashed()->where('imagen_principal', $anterior)->exists()) {
+                                if (! Storage::disk('cabanas')->delete($anterior)) {
+                                    report(new \RuntimeException('No se pudo retirar una imagen sustituida.'));
+                                }
+                            }
+                        } catch (Throwable $error) {
+                            report($error);
+                        }
+                    });
+                }
+
                 return $registro;
             });
         } catch (Throwable $error) {

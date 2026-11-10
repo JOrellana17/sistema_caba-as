@@ -15,11 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo(fn () => route('sesion.mostrar'));
         $middleware->redirectUsersTo(fn () => route('inicio'));
-        $middleware->trimStrings(except: ['contrasena', 'contrasena_confirmation', 'telefono', 'numero_identidad']);
+        $middleware->trimStrings(except: ['contrasena', 'contrasena_confirmation', 'contrasena_actual', 'pin', 'pin_confirmation', 'telefono', 'numero_identidad']);
         $middleware->alias(['usuario.activo' => VerificarUsuarioActivo::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->dontFlash(['contrasena', 'contrasena_confirmation', 'url', 'token']);
+        $exceptions->dontFlash(['contrasena', 'contrasena_confirmation', 'contrasena_actual', 'pin', 'pin_confirmation', 'url', 'token']);
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );

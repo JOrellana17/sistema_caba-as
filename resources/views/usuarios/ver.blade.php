@@ -34,6 +34,17 @@
     </form>
 </div></section>
 @endcan
+@can('usuarios.restablecer_pin')
+<section class="card border-0 shadow-sm mb-4"><div class="card-body">
+<h2 class="h5">Restablecer PIN</h2><p>{{ $usuario->pin ? 'Esta cuenta tiene PIN.' : 'Esta cuenta no tiene PIN.' }} Se revocarán todas sus sesiones.</p>
+<form method="POST" action="{{ route('usuarios.pin', $usuario) }}">@csrf @method('PUT')
+<x-campo nombre="pin" etiqueta="Nuevo PIN de seis dígitos" tipo="password" inputmode="numeric" maxlength="6" autocomplete="off" required />
+<x-campo nombre="pin_confirmation" etiqueta="Confirmar PIN" tipo="password" inputmode="numeric" maxlength="6" autocomplete="off" required />
+<x-generar-credencial tipo="pin" contexto="pin" />
+<button class="btn btn-primary" type="submit">Restablecer PIN</button></form>
+@if ($usuario->pin)<form class="mt-3" method="POST" action="{{ route('usuarios.pin', $usuario) }}">@csrf @method('PUT')<input type="hidden" name="retirar_pin" value="1"><button class="btn btn-outline-danger" type="submit">Retirar PIN</button></form>@endif
+</div></section>
+@endcan
 <div class="row g-4">
 @can('usuarios.restablecer_contrasena')
 <section class="col-12 col-lg-6"><div class="card border-0 shadow-sm h-100"><div class="card-body">
@@ -41,7 +52,8 @@
     <form method="POST" action="{{ route('usuarios.contrasena', $usuario) }}">@csrf @method('PUT')
         <x-campo nombre="contrasena" etiqueta="Nueva contraseña" tipo="password" autocomplete="new-password" minlength="12" required />
         <x-campo nombre="contrasena_confirmation" etiqueta="Confirmar contraseña" tipo="password" autocomplete="new-password" required />
-        <p class="text-body-secondary small">Al menos 12 caracteres y hasta 72 bytes. Las sesiones anteriores dejarán de ser válidas.</p>
+        <x-generar-credencial tipo="contrasena" contexto="contrasena" />
+        <p class="text-body-secondary small">Restablecer desactiva el PIN anterior. Al menos 12 caracteres y hasta 72 bytes. Las sesiones anteriores dejarán de ser válidas.</p>
         <button class="btn btn-primary" type="submit">Restablecer contraseña</button>
     </form>
 </div></div></section>

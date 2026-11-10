@@ -15,18 +15,32 @@
             <form method="POST" action="{{ route('sesion.iniciar') }}">
                 @csrf
                 <div class="mb-3">
-                    <label for="usuario" class="form-label">Usuario</label>
+                    <label for="usuario" class="form-label">Usuario o correo</label>
                     <input id="usuario" name="usuario" type="text" class="form-control @error('usuario') is-invalid @enderror"
-                        value="{{ is_string(old('usuario')) ? old('usuario') : '' }}" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="100" required
+                        value="{{ is_string(old('usuario')) ? old('usuario') : '' }}" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="255" required
                         @error('usuario') aria-invalid="true" aria-describedby="error-usuario" @enderror>
                     @error('usuario') <div id="error-usuario" class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="mb-3">
+                    <label for="metodo" class="form-label">Acceder con</label>
+                    <select id="metodo" name="metodo" class="form-select" data-metodo-acceso>
+                        <option value="contrasena" @selected(old('metodo') !== 'pin')>Contraseña</option>
+                        <option value="pin" @selected(old('metodo') === 'pin')>PIN</option>
+                    </select>
+                </div>
+                <div class="mb-3" data-acceso-contrasena>
                     <label for="contrasena" class="form-label">Contraseña</label>
                     <input id="contrasena" name="contrasena" type="password" class="form-control @error('contrasena') is-invalid @enderror"
                         autocomplete="current-password" maxlength="1024" required
                         @error('contrasena') aria-invalid="true" aria-describedby="error-contrasena" @enderror>
                     @error('contrasena') <div id="error-contrasena" class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+                <div class="mb-3" data-acceso-pin @if (old('metodo') !== 'pin') hidden @endif>
+                    <label for="pin" class="form-label">PIN de seis dígitos</label>
+                    <input id="pin" name="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off"
+                        class="form-control @error('pin') is-invalid @enderror" disabled
+                        @error('pin') aria-invalid="true" aria-describedby="error-pin" @enderror>
+                    @error('pin') <div id="error-pin" class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="form-check mb-4">
                     <input id="recordar" name="recordar" type="checkbox" class="form-check-input" value="1" @checked(old('recordar'))>

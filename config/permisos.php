@@ -10,10 +10,11 @@ return [
     'pagos' => ['ver', 'crear', 'reembolsar', 'ver_resumen'],
     'servicios' => ['ver', 'crear', 'editar', 'eliminar', 'cambiar_estado'],
     'reportes' => ['ver', 'exportar'],
-    'usuarios' => ['ver', 'crear', 'editar', 'eliminar', 'cambiar_estado', 'restablecer_contrasena', 'gestionar_roles', 'gestionar_permisos'],
+    'usuarios' => ['ver', 'crear', 'editar', 'eliminar', 'cambiar_estado', 'restablecer_contrasena', 'restablecer_pin', 'gestionar_roles', 'gestionar_permisos'],
     'roles' => ['ver', 'crear', 'editar', 'eliminar', 'gestionar_permisos'],
     'permisos' => ['ver', 'crear', 'editar', 'eliminar'],
     'configuracion' => ['ver', 'editar', 'exportar', 'importar', 'limpiar_cache'],
     'auditoria' => ['ver'],
+    'sesiones' => ['ver_todas'],
     'calendario' => ['administrar_fuentes', 'sincronizar', 'importar', 'exportar', 'gestionar_enlaces', 'gestionar_bloqueos', 'vincular'],
 ];
