@@ -91,8 +91,10 @@ class ServicioCabanas
         } catch (Throwable $error) {
             if ($rutaImagen) {
                 try {
-                    Storage::disk('cabanas')->delete($rutaImagen);
-                } catch (FilesystemException $errorLimpieza) {
+                    if (! Storage::disk('cabanas')->delete($rutaImagen)) {
+                        report(new \RuntimeException('No se pudo retirar la imagen nueva tras revertir el guardado.'));
+                    }
+                } catch (Throwable $errorLimpieza) {
                     report($errorLimpieza);
                 }
             }
