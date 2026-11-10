@@ -1,60 +1,112 @@
-*.log
-.DS_Store
-# Entornos y credenciales locales; conservar la plantilla sin secretos.
-.env*
+################################################################################
+# ENTORNOS Y CREDENCIALES
+################################################################################
+.env
+.env.local
+.env.*.local
 !.env.example
+
+################################################################################
+# DEPENDENCIAS Y ARTIFACTS DE CONSTRUCCIÓN
+################################################################################
+/vendor
+/node_modules
+package-lock.json
+composer.lock
+
+################################################################################
+# LOGS Y ARCHIVOS TEMPORALES DEL SISTEMA
+################################################################################
+*.log
+logs/
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.bak
+*.orig
+
+################################################################################
+# BASES DE DATOS Y VOLCADOS
+################################################################################
 *.sql
 *.sql.gz
-.phpactor.json
-.phpunit.result.cache
-/.codex
-/.cursor/
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
-/node_modules
-/public/build
-/public/fonts-manifest.dev.json
-/public/hot
-/public/storage
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+*.dump
+*.sql.zip
+/backups
+/backup
+
+################################################################################
+# ALMACENAMIENTO Y CACHÉ DE LARAVEL
+################################################################################
 /storage/*.key
 /storage/pail
-/vendor
-# Resultados, perfiles de navegador y artefactos de herramientas de desarrollo.
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/bootstrap/cache/*
+
+################################################################################
+# COMPILACIÓN Y BUILD
+################################################################################
+/public/build
+/public/hot
+/public/fonts-manifest.dev.json
+
+################################################################################
+# IDE Y EDITORES
+################################################################################
+/.vscode/
+/.idea/
+/.cursor/
+/.nova/
+/.zed/
+.phpactor.json
+_ide_helper.php
+Homestead.json
+Homestead.yaml
+
+################################################################################
+# HERRAMIENTAS DE ANÁLISIS Y TESTING
+################################################################################
 /coverage
 /htmlcov
 /test-results
 /playwright-report
 /.cache
 /.npm
-/npm-debug.log*
-/yarn-debug.log*
-/yarn-error.log*
 /.php-cs-fixer.cache
 /.phpstan.cache
-*.swp
-*.swo
-*~
-# Backups y volcados privados; no excluir fuentes, pruebas, documentación ni locks.
-/backups
-/backup
-*.sql.zip
-*.dump
-*.bak
-*.sqlite
-*.sqlite3
-*.sqlite-journal
-*.sqlite-wal
-*.sqlite-shm
-_ide_helper.php
-Homestead.json
-Homestead.yaml
-Thumbs.db
+.phpunit.result.cache
+/.phpunit.cache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Archivos de construcción/guía del proyecto y soporte de pruebas (solo a futuro).
+################################################################################
+# AUTENTICACIÓN Y CONFIGURACIÓN PRIVADA
+################################################################################
+/auth.json
+
+################################################################################
+# COPILOT Y HERRAMIENTAS DE IA
+################################################################################
+/.codex/
+/.codex-remote-attachments/
+.codex-remote-attachments/
+
+################################################################################
+# ARCHIVOS DE GUÍA DEL PROYECTO (solo a futuro)
+################################################################################
 # Nota: si ya están versionados, seguirán en Git hasta quitarlos del índice.
 /.agents
 /AGENTS.md
@@ -62,7 +114,12 @@ Thumbs.db
 /INSTRUCCIONES_AGENTE_CONSTRUCTOR_CEC.md
 /SYSTEM_SPEC.md
 /SYSTEM_SPEC_CEC_RECONSTRUCCION.md
+
+################################################################################
+# DOCUMENTACIÓN Y TESTS (opcional, solo para futuro despliegue limpio)
+################################################################################
+# Descomenta estas líneas si deseas que docs/ y tests/ se excluyan en el futuro
 /docs
 /tests
 /phpunit.xml
-.codex-remote-attachments/01a1a2f7-a578-7171-961b-9ab8ca4de349/c57ee9ad-d8e9-49ba-840c-269a84aa9be7/1-Factura-Geovani-Javier-Ireta-Ayala.pdf
+RESUMEN_GITIGNORE.txt
