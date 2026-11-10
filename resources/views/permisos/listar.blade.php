@@ -3,7 +3,6 @@
 @section('contenido')
 <div class="d-flex justify-content-between flex-wrap gap-3 mb-4">
 <h1 class="h2">Permisos</h1>
-@can('permisos.crear')<div><a class="btn btn-primary" href="{{ route('permisos.crear') }}">Crear permiso</a></div>@endcan
 </div>
 <div class="card border-0 shadow-sm"><div class="table-responsive">
 <table class="table align-middle mb-0"><caption class="px-3">Permisos del sistema</caption>
