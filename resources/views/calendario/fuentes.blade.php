@@ -1,9 +1,8 @@
 @extends('layouts.administracion')
-@section('titulo', 'Fuentes de calendario')
+@section('titulo', 'Importación de calendario')
 @section('contenido')
-<h1 class="h3 mb-3">Fuentes, importar y exportar</h1>
-<p class="alert alert-info">Cada anuncio corresponde a una cabaña. Los enlaces externos son privados. Solo el origen puede liberar sus bloqueos. Para conectar CEC con plataformas necesitarás un dominio HTTPS; los archivos ICS se pueden probar localmente.</p>
-@if (session('enlace_ical'))<div class="alert alert-success"><label for="enlace-generado" class="form-label">Copia este enlace; solo se muestra ahora</label><input id="enlace-generado" class="form-control" readonly value="{{ session('enlace_ical') }}"><p class="small mb-0 mt-2">No compartas el enlace públicamente. Usa uno distinto por destino.</p></div>@endif
+<h1 class="h3 mb-3">Fuentes e importación</h1>
+<p class="alert alert-info">Cada anuncio corresponde a una cabaña. Importa archivos ICS o consulta las fuentes externas configuradas. Solo el origen puede liberar sus bloqueos. Para conectar CEC con plataformas necesitarás un dominio HTTPS; los archivos ICS se pueden probar localmente.</p>
 
 @can('calendario.administrar_fuentes')
 <section class="card card-body mb-4">
@@ -59,19 +58,5 @@
 </form></section>
 @endcan
 
-@can('calendario.exportar')
-<section class="card card-body mb-4"><h2 class="h5">Descargar calendario ICS</h2><form method="GET" action="{{ route('calendario.descargar') }}">
-<div class="row g-3 mb-3"><div class="col-md-4"><label for="exportar-cabana" class="form-label">Alcance</label><select class="form-select" id="exportar-cabana" name="cabana_id"><option value="">Todas las cabañas (uso administrativo)</option>@foreach ($cabanas as $cabana)<option value="{{ $cabana->id }}">{{ $cabana->nombre }}</option>@endforeach</select></div><div class="col-md-4"><label for="exportar-desde" class="form-label">Desde</label><input class="form-control" id="exportar-desde" type="date" name="desde" required></div><div class="col-md-4"><label for="exportar-hasta" class="form-label">Hasta (incluida)</label><input class="form-control" id="exportar-hasta" type="date" name="hasta" required></div></div><button class="btn btn-outline-primary" type="submit">Descargar ICS</button>
-</form></section>
-@endcan
-
-@can('calendario.gestionar_enlaces')
-<section class="card card-body mb-4"><h2 class="h5">Enlace de exportación por destino</h2><form method="POST" action="{{ route('calendario.enlaces.guardar') }}">@csrf
-<div class="row g-3 mb-3"><div class="col-md-3"><label for="enlace-cabana" class="form-label">Cabaña</label><select class="form-select" id="enlace-cabana" name="cabana_id"><option value="">General (solo destino general)</option>@foreach ($cabanas as $cabana)<option value="{{ $cabana->id }}">{{ $cabana->nombre }}</option>@endforeach</select></div><div class="col-md-3"><label for="destino" class="form-label">Destino</label><select class="form-select" id="destino" name="destino" required><option value="airbnb">Airbnb</option><option value="booking">Booking</option><option value="general">General administrativo</option></select></div><div class="col-md-3"><label for="enlace-desde" class="form-label">Desde</label><input class="form-control" id="enlace-desde" name="desde" type="date" required></div><div class="col-md-3"><label for="enlace-hasta" class="form-label">Hasta (incluida)</label><input class="form-control" id="enlace-hasta" name="hasta" type="date" required></div></div>
-<button class="btn btn-primary" type="submit">Generar enlace privado</button><p class="form-text">Revisa y renueva el rango antes de que venza. La exportación inicial incluye reservas CEC y bloqueos CEC; reenviar eventos de un canal a otro requiere comprobar los ecos en un piloto real.</p>
-</form>
-<ul class="list-group mt-3">@foreach ($enlaces as $enlace)<li class="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2"><span>{{ $enlace->cabana?->nombre ?? 'General' }} · {{ $enlace->destino }} · {{ $enlace->desde->format('d/m/Y') }}–{{ $enlace->hasta->format('d/m/Y') }} · {{ $enlace->activo ? 'Activo' : 'Revocado' }}</span>@if ($enlace->activo)<form method="POST" action="{{ route('calendario.enlaces.revocar', $enlace) }}">@csrf<button class="btn btn-sm btn-outline-danger" type="submit">Revocar</button></form>@endif</li>@endforeach</ul>
-</section>
-@endcan
 <section><h2 class="h5">Últimas sincronizaciones</h2><ul class="list-group">@forelse ($historial as $lectura)<li class="list-group-item">Fuente {{ $lectura->fuente_id }} · {{ $lectura->estado }} · {{ $lectura->procesados }} procesados · {{ $lectura->retirados }} retirados · {{ $lectura->created_at->format('d/m/Y H:i') }} UTC @if ($lectura->error)<br>{{ $lectura->error }}@endif</li>@empty<li class="list-group-item">Sin ejecuciones.</li>@endforelse</ul></section>
 @endsection

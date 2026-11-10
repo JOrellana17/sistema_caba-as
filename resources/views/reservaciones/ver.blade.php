@@ -51,11 +51,6 @@
         <p class="alert alert-warning mt-3 mb-0">Esta solicitud está pendiente de confirmar. Por sí sola no bloquea disponibilidad; un evento externo vinculado conserva su propio bloqueo.</p>
     @endif
 </div>
-@can('calendario.exportar')
-    @if (in_array($reservacion->estado, ['confirmada', 'hospedada'], true) && ! $reservacion->eventoCalendario)
-        <a class="btn btn-outline-secondary mb-3" href="{{ route('calendario.descargar', ['reservacion_id' => $reservacion->id, 'desde' => $reservacion->fecha_entrada->format('Y-m-d'), 'hasta' => $reservacion->fecha_salida->format('Y-m-d')]) }}">Descargar ICS de esta reservación</a>
-    @endif
-@endcan
 <div class="d-flex flex-wrap gap-2 mb-4">
     @can('reservaciones.editar')
         @if (in_array($reservacion->estado, ['pendiente', 'confirmada']))

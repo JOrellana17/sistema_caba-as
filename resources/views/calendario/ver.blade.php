@@ -3,8 +3,8 @@
 @section('contenido')
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <h1 class="h3 mb-0">Calendario</h1>
-    @canany(['calendario.administrar_fuentes', 'calendario.importar', 'calendario.gestionar_enlaces', 'calendario.exportar', 'calendario.gestionar_bloqueos', 'calendario.sincronizar'])
-        <a class="btn btn-outline-primary" href="{{ route('calendario.fuentes') }}">Fuentes, importar y exportar</a>
+    @canany(['calendario.administrar_fuentes', 'calendario.importar', 'calendario.gestionar_bloqueos', 'calendario.sincronizar'])
+        <a class="btn btn-outline-primary" href="{{ route('calendario.fuentes') }}">Fuentes e importar</a>
     @endcanany
 </div>
 <form method="GET" action="{{ route('calendario.ver') }}" class="card card-body mb-4">

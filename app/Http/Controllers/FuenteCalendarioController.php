@@ -6,7 +6,6 @@ use App\Http\Requests\ActualizarFuenteCalendarioRequest;
 use App\Http\Requests\GuardarFuenteCalendarioRequest;
 use App\Jobs\SincronizarFuenteCalendario;
 use App\Models\Cabana;
-use App\Models\EnlaceCalendario;
 use App\Models\FuenteCalendario;
 use App\Models\SincronizacionCalendario;
 use App\Services\ServicioArchivoCalendario;
@@ -28,12 +27,11 @@ class FuenteCalendarioController extends Controller
 
     public function listar(): View
     {
-        abort_unless(Gate::any(['calendario.administrar_fuentes', 'calendario.importar', 'calendario.gestionar_enlaces', 'calendario.exportar', 'calendario.gestionar_bloqueos', 'calendario.sincronizar']), 403);
+        abort_unless(Gate::any(['calendario.administrar_fuentes', 'calendario.importar', 'calendario.gestionar_bloqueos', 'calendario.sincronizar']), 403);
 
         return view('calendario.fuentes', [
             'fuentes' => FuenteCalendario::with('cabana:id,nombre,deleted_at')->orderBy('id')->paginate(20),
             'cabanas' => Cabana::orderBy('nombre')->get(['id', 'nombre']),
-            'enlaces' => EnlaceCalendario::with('cabana:id,nombre,deleted_at')->latest('id')->limit(100)->get(),
             'historial' => SincronizacionCalendario::latest('id')->limit(20)->get(),
         ]);
     }
