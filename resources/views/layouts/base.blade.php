@@ -1,3 +1,4 @@
+{{-- layouts: Presentación de base. --}}
 <!DOCTYPE html>
 <html lang="es">
 <head>

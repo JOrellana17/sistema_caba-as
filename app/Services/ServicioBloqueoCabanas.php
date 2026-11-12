@@ -1,5 +1,8 @@
 <?php
 
+// Servicio de bloqueo cabanas. Centraliza las operaciones descritas en sus métodos para que los
+// controladores reutilicen las mismas reglas.
+
 namespace App\Services;
 
 use App\Models\Cabana;
@@ -9,6 +12,8 @@ use LogicException;
 
 class ServicioBloqueoCabanas
 {
+    // Ordena y bloquea las cabañas con SELECT FOR UPDATE dentro de una transacción. El orden común
+    // reduce interbloqueos y serializa las operaciones de disponibilidad.
     public function adquirir(array $identificadores): Collection
     {
         if (DB::transactionLevel() < 1) {

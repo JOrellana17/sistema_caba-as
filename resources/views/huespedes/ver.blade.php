@@ -1,9 +1,12 @@
+{{-- huespedes: Detalle del registro y operaciones disponibles para el usuario actual. --}}
 @extends('layouts.administracion')
 @section('titulo', $huesped->nombre)
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center mb-4">
     <div><h1 class="h3">{{ $huesped->nombre }}</h1><x-condicion-huesped :huesped="$huesped" /></div>
     <div class="d-flex gap-2">
+        {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
         @can('huespedes.editar')<a href="{{ route('huespedes.editar', $huesped) }}" class="btn btn-primary">Editar ficha</a>@endcan
         <a href="{{ route('huespedes.listar') }}" class="btn btn-outline-secondary">Volver al listado</a>
     </div>
@@ -32,7 +35,9 @@
                 ['lista_negra', 'huespedes.cambiar_lista_negra', 'huespedes.lista_negra', 'Lista negra', 'Incluir en lista negra', 'Retirar de lista negra'],
                 ['frecuente', 'huespedes.marcar_frecuente', 'huespedes.frecuente', 'Frecuente', 'Marcar frecuente', 'Retirar marca frecuente'],
             ] as [$campo, $permiso, $ruta, $etiqueta, $alta, $baja])
+                {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
                 @can($permiso)
+                    {{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
                     <form method="POST" action="{{ route($ruta, $huesped) }}" class="mb-3" data-confirmar="¿Actualizar {{ mb_strtolower($etiqueta) }} de este huésped?">
                         @csrf @method('PUT')
                         <input type="hidden" name="valor" value="{{ $huesped->{$campo} ? '0' : '1' }}">
@@ -40,7 +45,9 @@
                     </form>
                 @endcan
             @endforeach
+            {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
             @can('huespedes.eliminar')
+                {{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
                 <form method="POST" action="{{ route('huespedes.eliminar', $huesped) }}" data-confirmar="¿Eliminar esta ficha? Se conservarán sus datos para una posible restauración.">
                     @csrf @method('DELETE')
                     <button class="btn btn-outline-danger" type="submit">Eliminar huésped</button>
@@ -55,6 +62,7 @@
     <div class="table-responsive"><table class="table">
         <thead><tr><th scope="col">Cabaña</th><th scope="col">Entrada / salida</th><th scope="col">Estado</th><th scope="col">Detalle</th></tr></thead>
         <tbody>
+        {{-- Renderiza los registros y ofrece un estado vacío cuando no existen coincidencias. --}}
         @forelse ($estancias as $estancia)
             <tr><td>{{ $estancia->cabana->nombre }}</td><td>{{ $estancia->fecha_entrada->format('d/m/Y') }} / {{ $estancia->fecha_salida->format('d/m/Y') }}</td>
                 <td>{{ \App\Models\Reservacion::ESTADOS[$estancia->estado] }}</td><td><a href="{{ route('reservaciones.ver', $estancia) }}">Ver reservación {{ $estancia->codigo }}</a></td></tr>
@@ -73,6 +81,7 @@
     <div class="table-responsive"><table class="table">
         <thead><tr><th scope="col">Fecha ({{ config('app.timezone') }})</th><th scope="col">Usuario</th><th scope="col">Acción</th><th scope="col">Detalle</th></tr></thead>
         <tbody>
+        {{-- Renderiza los registros y ofrece un estado vacío cuando no existen coincidencias. --}}
         @forelse ($historial as $registro)
             <tr><td>{{ $registro->created_at->format('d/m/Y H:i:s') }}</td><td>{{ $registro->usuario?->nombre ?? 'Sin usuario' }}</td>
                 <td>{{ $acciones[$registro->accion] ?? $registro->accion }}</td><td><a href="{{ route('auditoria.ver', $registro) }}">Ver registro</a></td></tr>

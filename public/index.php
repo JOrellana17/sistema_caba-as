@@ -1,5 +1,7 @@
 <?php
 
+// Punto de entrada HTTP: carga Composer, arranca Laravel y entrega la petición al framework.
+
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 

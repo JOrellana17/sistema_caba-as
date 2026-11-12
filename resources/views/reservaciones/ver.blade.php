@@ -1,5 +1,7 @@
+{{-- reservaciones: Detalle del registro y operaciones disponibles para el usuario actual. --}}
 @extends('layouts.administracion')
 @section('titulo', 'Reservación')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <h1 class="h3 mb-3">Reservación</h1>
 <p class="text-body-secondary">Código: {{ $reservacion->codigo }}</p>
@@ -12,6 +14,7 @@
 @endif
 @if ($reservacion->eventoCalendario)
     <div class="alert alert-info">Esta reservación está vinculada a {{ strtoupper($reservacion->eventoCalendario->origen) }}. Cancelarla o reagendarla en CEC conserva el bloqueo externo hasta comprobar su cambio en el origen.
+        {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
         @can('reservaciones.ver_calendario')<a href="{{ route('calendario.evento', $reservacion->eventoCalendario) }}">Revisar evento externo</a>@endcan
     </div>
     @if ($reservacion->eventoCalendario->discrepancia)<p class="alert alert-warning">Hay una discrepancia con el calendario de origen. Revisa ambas operaciones; CEC conserva las fechas e importes de esta reservación.</p>@endif
@@ -52,39 +55,53 @@
     @endif
 </div>
 <div class="d-flex flex-wrap gap-2 mb-4">
+    {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
     @can('reservaciones.editar')
         @if (in_array($reservacion->estado, ['pendiente', 'confirmada']))
+            {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
             @can('huespedes.buscar')<a class="btn btn-outline-primary" href="{{ route('reservaciones.editar', $reservacion) }}">Reagendar o editar</a>@endcan
         @endif
     @endcan
+    {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
     @can('reservaciones.confirmar')
         @if (in_array($reservacion->estado, ['pendiente']))
+            {{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
             <form method="POST" action="{{ route('reservaciones.confirmar', $reservacion) }}" data-confirmar="¿Confirmar y bloquear la cabaña?">@csrf @method('PUT')<button class="btn btn-primary">Confirmar</button></form>
         @endif
     @endcan
+    {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
     @can('reservaciones.registrar_entrada')
         @if ($reservacion->estado === 'confirmada')
+            {{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
             <form method="POST" action="{{ route('reservaciones.entrada', $reservacion) }}">@csrf @method('PUT')<button class="btn btn-primary">Registrar entrada</button></form>
         @endif
     @endcan
+    {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
     @can('reservaciones.registrar_salida')
         @if ($reservacion->estado === 'hospedada')
+            {{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
             <form method="POST" action="{{ route('reservaciones.salida', $reservacion) }}">@csrf @method('PUT')<button class="btn btn-primary">Registrar salida</button></form>
         @endif
     @endcan
+    {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
     @can('reservaciones.marcar_no_presentado')
         @if (in_array($reservacion->estado, ['pendiente', 'confirmada']))
+            {{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
             <form method="POST" action="{{ route('reservaciones.no_presentado', $reservacion) }}" data-confirmar="¿Marcar como no presentado? Solo se permite desde la salida prevista.">@csrf @method('PUT')<button class="btn btn-outline-secondary">No presentado</button></form>
         @endif
     @endcan
+    {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
     @can('reservaciones.eliminar')
         @if (in_array($reservacion->estado, ['pendiente', 'cancelada', 'no_presentado']))
+            {{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
             <form method="POST" action="{{ route('reservaciones.eliminar', $reservacion) }}" data-confirmar="¿Eliminar lógicamente esta reservación?">@csrf @method('DELETE')<button class="btn btn-outline-danger">Eliminar</button></form>
         @endif
     @endcan
 </div>
+{{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
 @can('reservaciones.cancelar')
     @if (in_array($reservacion->estado, ['pendiente', 'confirmada']))
+        {{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
         <form method="POST" action="{{ route('reservaciones.cancelar', $reservacion) }}" class="card card-body mb-4" data-confirmar="¿Cancelar esta reservación? Los otros bloqueos vigentes se conservan.">
             @csrf @method('PUT')
             <label for="motivo_cancelacion" class="form-label">Motivo de cancelación (opcional)</label>
@@ -93,19 +110,23 @@
         </form>
     @endif
 @endcan
+{{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
 @can('reservaciones.editar')
     @canany(['reservaciones.autorizar_entrada_temprana', 'reservaciones.autorizar_salida_tardia'])
         @if (in_array($reservacion->estado, ['pendiente', 'confirmada', 'hospedada']))
+        {{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
         <form method="POST" action="{{ route('reservaciones.horarios', $reservacion) }}" class="card card-body mb-4">
             @csrf @method('PUT')
             <h2 class="h5">Autorizar horario excepcional</h2>
             <p>La entrada temprana y salida tardía requieren permisos administrativos y una nueva comprobación de disponibilidad. Hora de Honduras.</p>
             <div class="row">
+                {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
                 @can('reservaciones.autorizar_entrada_temprana')
                     @if ($reservacion->estado !== 'hospedada')
                     <div class="col-md-6"><x-campo nombre="hora_entrada" etiqueta="Hora de entrada" tipo="time" :valor="$reservacion->entrada_prevista->setTimezone(\App\Services\ServicioDisponibilidad::ZONA_HORARIA)->format('H:i')" required /></div>
                     @endif
                 @endcan
+                {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
                 @can('reservaciones.autorizar_salida_tardia')
                     <div class="col-md-6"><x-campo nombre="hora_salida" etiqueta="Hora de salida" tipo="time" :valor="$reservacion->salida_prevista->setTimezone(\App\Services\ServicioDisponibilidad::ZONA_HORARIA)->format('H:i')" required /></div>
                 @endcan

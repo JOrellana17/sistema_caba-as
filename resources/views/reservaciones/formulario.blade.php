@@ -1,8 +1,12 @@
+{{-- reservaciones: Formulario reutilizado para alta y edición; conserva entradas tras errores de validación. --}}
 @extends('layouts.administracion')
 @section('titulo', $reservacion->exists ? 'Reagendar reservación' : 'Nueva reservación')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <h1 class="h3 mb-4">{{ $reservacion->exists ? 'Reagendar reservación' : 'Nueva reservación' }}</h1>
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form method="POST" action="{{ $reservacion->exists ? route('reservaciones.actualizar', $reservacion) : route('reservaciones.guardar') }}" class="card card-body">
+    {{-- Incluye el token de sesión que protege la petición contra envíos desde otros sitios. --}}
     @csrf
     @if (! $reservacion->exists && request('evento_id', old('evento_id')))
         <input type="hidden" name="evento_id" value="{{ request('evento_id', old('evento_id')) }}">

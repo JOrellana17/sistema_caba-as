@@ -1,13 +1,18 @@
+{{-- calendario: Presentación de fuentes. --}}
 @extends('layouts.administracion')
 @section('titulo', 'Importación de calendario')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <h1 class="h3 mb-3">Fuentes e importación</h1>
 <p class="alert alert-info">Cada anuncio corresponde a una cabaña. Importa archivos ICS o consulta las fuentes externas configuradas. Solo el origen puede liberar sus bloqueos. Para conectar CEC con plataformas necesitarás un dominio HTTPS; los archivos ICS se pueden probar localmente.</p>
 
+{{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
 @can('calendario.administrar_fuentes')
 <section class="card card-body mb-4">
 <h2 class="h5">Nueva fuente externa</h2>
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form method="POST" action="{{ route('calendario.fuentes.guardar') }}">
+{{-- Incluye el token de sesión que protege la petición contra envíos desde otros sitios. --}}
 @csrf
 <div class="row g-3">
 <div class="col-md-4"><label for="fuente-cabana" class="form-label">Cabaña</label><select id="fuente-cabana" class="form-select" name="cabana_id" required><option value="">Selecciona</option>@foreach ($cabanas as $cabana)<option value="{{ $cabana->id }}" @selected(old('cabana_id') == $cabana->id)>{{ $cabana->nombre }}</option>@endforeach</select></div>
@@ -27,18 +32,23 @@
 
 <section class="mb-4">
 <h2 class="h4">Fuentes configuradas</h2>
+{{-- Renderiza los registros y ofrece un estado vacío cuando no existen coincidencias. --}}
 @forelse ($fuentes as $fuente)
 <div class="card card-body mb-3">
 <h3 class="h5">{{ $fuente->nombre }} · {{ $fuente->cabana?->nombre }} · {{ strtoupper($fuente->proveedor) }}</h3>
 <p class="mb-2">{{ $fuente->activa ? 'Activa' : 'Suspendida / sin activar' }} · {{ $fuente->estado }}<br>Última lectura correcta: {{ $fuente->ultima_correcta?->setTimezone(\App\Services\ServicioDisponibilidad::ZONA_HORARIA)->format('d/m/Y H:i') ?? 'Sin lecturas' }}<br>Próxima consulta: {{ $fuente->proxima_consulta?->setTimezone(\App\Services\ServicioDisponibilidad::ZONA_HORARIA)->format('d/m/Y H:i') ?? 'Sin programar' }}</p>
 @if ($fuente->error)<p class="text-danger">{{ $fuente->error }}</p>@endif
+{{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
 @can('calendario.importar')
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form class="d-flex flex-wrap gap-2 align-items-center mb-2" method="POST" action="{{ route('calendario.previsualizar', $fuente) }}" enctype="multipart/form-data">
 @csrf<label for="archivo-{{ $fuente->id }}" class="form-label mb-0">Archivo ICS, hasta 2 MiB</label><input class="form-control w-auto" type="file" id="archivo-{{ $fuente->id }}" name="archivo" accept=".ics,text/calendar"><button class="btn btn-outline-primary" type="submit">Previsualizar archivo o URL</button>
 </form>
 @endcan
 <div class="d-flex flex-wrap gap-2">
+{{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
 @can('calendario.sincronizar')@if ($fuente->activa && $fuente->url)<form method="POST" action="{{ route('calendario.sincronizar', $fuente) }}">@csrf<button class="btn btn-outline-primary" type="submit">Sincronizar ahora</button></form>@endif @endcan
+{{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
 @can('calendario.administrar_fuentes')<a class="btn btn-outline-secondary" href="{{ route('calendario.fuentes.editar', $fuente) }}">Editar fuente</a>@if ($fuente->activa)<form method="POST" action="{{ route('calendario.fuentes.suspender', $fuente) }}">@csrf<button class="btn btn-outline-secondary" type="submit">Suspender consultas (conserva bloqueos)</button></form>@endif @endcan
 </div>
 </div>
@@ -46,8 +56,10 @@
 {{ $fuentes->links() }}
 </section>
 
+{{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
 @can('calendario.gestionar_bloqueos')
 <section class="card card-body mb-4"><h2 class="h5">Bloqueo manual CEC con período</h2>
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form method="POST" action="{{ route('calendario.bloquear') }}">@csrf
 <div class="row g-3 mb-3">
 <div class="col-md-4"><label for="bloqueo-cabana" class="form-label">Cabaña</label><select class="form-select" id="bloqueo-cabana" name="cabana_id" required>@foreach ($cabanas as $cabana)<option value="{{ $cabana->id }}">{{ $cabana->nombre }}</option>@endforeach</select></div>

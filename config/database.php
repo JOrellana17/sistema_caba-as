@@ -1,5 +1,8 @@
 <?php
 
+// Conexiones, migraciones y Redis del framework. En esta instalación se utiliza MySQL; las otras
+// opciones disponibles no cambian la base activa por sí solas.
+
 use Illuminate\Support\Str;
 use Pdo\Mysql;
 

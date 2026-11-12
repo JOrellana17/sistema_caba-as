@@ -1,5 +1,8 @@
 <?php
 
+// Validación de entrada HTTP. Valida filtros y paginación del listado para consultar códigos, estados,
+// clientes, cabañas y fechas admitidos.
+
 namespace App\Http\Requests;
 
 use App\Models\Reservacion;
@@ -7,6 +10,8 @@ use Illuminate\Validation\Rule;
 
 class ConsultarReservacionesRequest extends SolicitudAdministrativa
 {
+    // Valida filtros y paginación del listado para consultar códigos, estados, clientes, cabañas y
+    // fechas admitidos.
     public function rules(): array
     {
         return [
@@ -20,6 +25,8 @@ class ConsultarReservacionesRequest extends SolicitudAdministrativa
         ];
     }
 
+    // Define mensajes legibles en español para los errores de validación; las claves corresponden a
+    // campos o reglas de Laravel.
     public function messages(): array
     {
         return array_merge(parent::messages(), [

@@ -1,5 +1,8 @@
 <?php
 
+// Servicio de perfil. Centraliza las operaciones descritas en sus métodos para que los controladores
+// reutilicen las mismas reglas.
+
 namespace App\Services;
 
 use App\Models\Usuario;
@@ -12,10 +15,15 @@ use Illuminate\Validation\ValidationException;
 
 class ServicioPerfil
 {
+    // Recibe ServicioSesiones, ServicioAuditoria mediante el contenedor de Laravel para reutilizarlas
+    // durante la operación.
     public function __construct(private ServicioSesiones $sesiones, private ServicioAuditoria $auditoria) {}
 
+    // Verifica la contraseña actual dentro de una transacción, cambia la credencial solicitada y
+    // revoca sesiones previas. Renueva la sesión del titular y registra el cambio sin secretos.
     public function cambiar(Request $solicitud, array $datos): void
     {
+        // Las escrituras de este bloque se confirman juntas; una excepción revierte sus cambios en la base de datos.
         $usuario = DB::transaction(function () use ($solicitud, $datos) {
             $usuario = Usuario::lockForUpdate()->findOrFail($solicitud->user()->id);
             abort_unless($usuario->activo, 403);

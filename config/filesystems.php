@@ -1,5 +1,8 @@
 <?php
 
+// Discos de almacenamiento de Laravel. El disco de cabañas mantiene las imágenes fuera del acceso
+// público directo; el controlador las sirve con autorización.
+
 return [
 
     /*

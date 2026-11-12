@@ -1,5 +1,8 @@
 <?php
 
+// Identidad, entorno, idioma, zona horaria y clave de cifrado de Laravel. Los valores sensibles se
+// leen del entorno y no deben copiarse a los comentarios.
+
 return [
 
     /*

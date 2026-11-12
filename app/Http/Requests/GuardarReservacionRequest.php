@@ -1,11 +1,16 @@
 <?php
 
+// Validación de entrada HTTP. Valida fechas, cabaña, huésped existente, ocupación y selección de
+// tarifa; los estados, autores y cálculos los fija el servicio.
+
 namespace App\Http\Requests;
 
 use Illuminate\Validation\Rule;
 
 class GuardarReservacionRequest extends SolicitudAdministrativa
 {
+    // Valida fechas, cabaña, huésped existente, ocupación y selección de tarifa; los estados, autores
+    // y cálculos los fija el servicio.
     public function rules(): array
     {
         $editando = $this->route('reservacion') !== null;
@@ -32,6 +37,8 @@ class GuardarReservacionRequest extends SolicitudAdministrativa
         ];
     }
 
+    // Define mensajes legibles en español para los errores de validación; las claves corresponden a
+    // campos o reglas de Laravel.
     public function messages(): array
     {
         return array_merge(parent::messages(), [

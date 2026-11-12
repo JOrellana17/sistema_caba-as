@@ -1,5 +1,7 @@
+{{-- huespedes: Presentación de buscador. --}}
 @extends('layouts.administracion')
 @section('titulo', 'Buscar cliente')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <h1 class="h3 mb-3">Buscar cliente</h1>
 <p class="text-body-secondary">Encuentra una ficha existente. Seleccionar un cliente no crea una reservación, factura ni pago.</p>

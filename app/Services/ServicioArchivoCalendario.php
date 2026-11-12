@@ -1,5 +1,8 @@
 <?php
 
+// Servicio de archivo calendario. Centraliza las operaciones descritas en sus métodos para que los
+// controladores reutilicen las mismas reglas.
+
 namespace App\Services;
 
 use Carbon\CarbonImmutable;
@@ -10,11 +13,14 @@ use Throwable;
 
 class ServicioArchivoCalendario
 {
+    // Convierte un ICS completo en eventos normalizados a UTC. Rechaza estructuras, fechas, UID
+    // duplicados, recurrencias y adjuntos no admitidos antes de que puedan modificar disponibilidad.
     public function analizar(string $contenido, string $interpretacion, string $zona): array
     {
         if (strlen($contenido) > config('icalendario.max_bytes') || ! in_array($interpretacion, ['noches_estancia', 'dias_completos'], true)) {
             throw new RuntimeException('Archivo o interpretación no permitidos.');
         }
+        // Comprueba límites y equilibrio BEGIN/END antes de entregar contenido al analizador ICS.
         $lineas = preg_split('/\r\n|\r|\n/', trim($contenido));
         $pila = [];
         foreach ($lineas as $linea) {
@@ -35,6 +41,7 @@ class ServicioArchivoCalendario
             throw new RuntimeException('Se requiere un calendario ICS completo.');
         }
         try {
+            // Exige el formato admitido y limita los componentes y la cantidad de eventos.
             $calendario = Reader::read($contenido);
             if ((string) $calendario->VERSION !== '2.0' || ! isset($calendario->PRODID)) {
                 throw new RuntimeException;
@@ -50,6 +57,7 @@ class ServicioArchivoCalendario
             }
             $resultado = [];
             foreach ($eventos as $evento) {
+                // Evita propiedades ambiguas o repetidas que puedan producir interpretaciones distintas del período.
                 foreach (['UID', 'DTSTART', 'DTEND', 'DURATION', 'STATUS'] as $unica) {
                     if (count($evento->select($unica)) > 1) {
                         throw new RuntimeException;
@@ -58,6 +66,7 @@ class ServicioArchivoCalendario
                 if (isset($evento->DTEND, $evento->DURATION)) {
                     throw new RuntimeException;
                 }
+                // Usa la huella del UID como clave para detectar duplicados sin truncar el identificador externo.
                 $uid = (string) $evento->UID;
                 if ($uid === '' || strlen($uid) > 1024 || isset($resultado[hash('sha256', $uid)])) {
                     throw new RuntimeException;
@@ -67,6 +76,7 @@ class ServicioArchivoCalendario
                         throw new RuntimeException('Recurrencias, excepciones o adjuntos requieren revisión; no se ha liberado disponibilidad.');
                     }
                 }
+                // Conserva una señal de cancelación para que la sincronización aplique sus reglas de liberación.
                 if ((string) $evento->STATUS === 'CANCELLED') {
                     $resultado[hash('sha256', $uid)] = ['uid' => $uid, 'cancelada' => true];
 
@@ -75,6 +85,7 @@ class ServicioArchivoCalendario
                 if (! isset($evento->DTSTART)) {
                     throw new RuntimeException;
                 }
+                // Valida zona, formato y fecha real antes de convertirlos; no acepta normalizaciones silenciosas.
                 foreach (['DTSTART', 'DTEND'] as $campoFecha) {
                     if (isset($evento->{$campoFecha}['TZID'])) {
                         new DateTimeZone((string) $evento->{$campoFecha}['TZID']);
@@ -88,6 +99,7 @@ class ServicioArchivoCalendario
                         }
                     }
                 }
+                // Distingue fechas sin hora y eventos con hora; calcula el final según DTEND, duración o día completo.
                 $completa = ! $evento->DTSTART->hasTime();
                 $inicio = CarbonImmutable::instance($evento->DTSTART->getDateTime(new DateTimeZone($zona)));
                 if (isset($evento->DTEND)) {
@@ -102,6 +114,7 @@ class ServicioArchivoCalendario
                 } else {
                     throw new RuntimeException;
                 }
+                // Interpreta las fechas de estancia con entrada a las 14:00 y salida a las 11:00 en la zona del negocio.
                 if ($completa && $interpretacion === 'noches_estancia') {
                     $inicio = CarbonImmutable::parse($inicio->format('Y-m-d').' 14:00', ServicioDisponibilidad::ZONA_HORARIA);
                     $fin = CarbonImmutable::parse($fin->format('Y-m-d').' 11:00', ServicioDisponibilidad::ZONA_HORARIA);
@@ -109,6 +122,7 @@ class ServicioArchivoCalendario
                 if ($fin->lessThanOrEqualTo($inicio)) {
                     throw new RuntimeException;
                 }
+                // Entrega intervalos UTC para compararlos con las demás fuentes de disponibilidad.
                 $resultado[hash('sha256', $uid)] = ['uid' => $uid, 'inicio' => $inicio->utc(), 'fin' => $fin->utc(), 'fecha_completa' => $completa, 'cancelada' => false];
             }
 

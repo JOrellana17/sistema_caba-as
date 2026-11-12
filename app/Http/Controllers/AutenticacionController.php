@@ -1,5 +1,8 @@
 <?php
 
+// Controlador HTTP de Autenticacion. Coordina solicitudes, servicios y respuestas; las rutas declaran
+// los permisos de cada operación.
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\IniciarSesionRequest;
@@ -13,11 +16,15 @@ use Illuminate\View\View;
 
 class AutenticacionController extends Controller
 {
+    // Presenta el formulario público de acceso; la ruta guest evita mostrarlo a una sesión
+    // autenticada.
     public function mostrar(): View
     {
         return view('autenticacion.iniciar-sesion');
     }
 
+    // Entrega los datos validados al servicio de autenticación. Dirige al Aseador a su módulo y al
+    // resto al destino solicitado o al inicio.
     public function iniciar(IniciarSesionRequest $solicitud, ServicioAutenticacion $autenticacion): RedirectResponse
     {
         $autenticacion->iniciar($solicitud);
@@ -31,6 +38,8 @@ class AutenticacionController extends Controller
         return redirect()->intended(route('inicio'));
     }
 
+    // Cierra el historial, termina la autenticación, invalida la sesión y renueva el token CSRF;
+    // conserva al actor para registrar quién salió.
     public function cerrar(Request $solicitud, ServicioAuditoria $auditoria, ServicioSesiones $sesiones): RedirectResponse
     {
         $usuario = $solicitud->user();

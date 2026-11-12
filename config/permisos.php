@@ -1,5 +1,8 @@
 <?php
 
+// Catálogo explícito de módulos y acciones. El proveedor registra sus Gates y la semilla crea los
+// códigos; listar un permiso no implementa por sí solo su funcionalidad.
+
 return [
     'panel' => ['ver'],
     'aseo' => ['ver', 'confirmar'],

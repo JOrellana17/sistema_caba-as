@@ -1,8 +1,11 @@
+{{-- reservaciones: Presentación de disponibilidad. --}}
 @extends('layouts.administracion')
 @section('titulo', 'Disponibilidad')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <h1 class="h3 mb-3">Consultar disponibilidad</h1>
 <p class="text-body-secondary">Entrada a las 14:00 y salida a las 11:00, hora de Honduras.</p>
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form method="GET" action="{{ url()->current() }}" class="card card-body mb-4">
     <div class="row g-3 align-items-end">
         <div class="col-md-3">
@@ -28,6 +31,7 @@
 </div>
 <p class="small text-body-secondary">La disponibilidad se volverá a comprobar al guardar la reservación. El aseo indica la condición actual de la cabaña; debe confirmarse antes de registrar una entrada.</p>
 <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+    {{-- Renderiza los registros y ofrece un estado vacío cuando no existen coincidencias. --}}
     @forelse ($cabanas as $cabana)
         <div class="col">
             <article class="card h-100 {{ $cabana->en_aseo ? 'border-warning' : '' }}" aria-labelledby="disponibilidad-cabana-{{ $cabana->id }}" data-cabana-disponible="{{ $cabana->id }}">
@@ -48,6 +52,7 @@
                     @if ($cabana->en_aseo)
                         <p class="small text-body-secondary mb-0">Requiere confirmar el aseo antes de registrar la entrada. Puedes reservar para las fechas consultadas.</p>
                     @endif
+                    {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
                     @can('cabanas.ver')
                         <a class="btn btn-outline-primary mt-auto" href="{{ route('cabanas.ver', $cabana) }}">Ver detalles de la cabaña<span class="visually-hidden"> {{ $cabana->nombre }}</span></a>
                     @endcan

@@ -1,5 +1,8 @@
 <?php
 
+// Servicio de exportacion calendario. Centraliza las operaciones descritas en sus métodos para que los
+// controladores reutilicen las mismas reglas.
+
 namespace App\Services;
 
 use App\Models\Cabana;
@@ -11,6 +14,8 @@ use Sabre\VObject\Component\VCalendar;
 
 class ServicioExportacionCalendario
 {
+    // Genera un ICS con ocupación CEC y UID estables dentro del rango solicitado. Publica únicamente
+    // «No disponible», sin datos del huésped, y evita reenviar ocupación importada.
     public function generar(?int $cabanaId, CarbonImmutable $desde, CarbonImmutable $hasta, ?Reservacion $individual = null): string
     {
         $inicio = CarbonImmutable::parse($desde->format('Y-m-d'), ServicioDisponibilidad::ZONA_HORARIA)->utc();
@@ -48,6 +53,8 @@ class ServicioExportacionCalendario
         return $calendario->serialize();
     }
 
+    // Valida que el rango de un enlace no haya vencido y genera su calendario para la cabaña y fechas
+    // autorizadas.
     public function feed(EnlaceCalendario $enlace): string
     {
         abort_if($enlace->hasta->format('Y-m-d') < now(ServicioDisponibilidad::ZONA_HORARIA)->format('Y-m-d'), 410, 'El rango del enlace expiró.');

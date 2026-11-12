@@ -1,5 +1,8 @@
 <?php
 
+// Servicio de gestion calendario. Centraliza las operaciones descritas en sus métodos para que los
+// controladores reutilicen las mismas reglas.
+
 namespace App\Services;
 
 use App\Models\Cabana;
@@ -16,8 +19,12 @@ use Illuminate\Validation\ValidationException;
 
 class ServicioGestionCalendario
 {
+    // Recibe ServicioBloqueoCabanas, ServicioAuditoria, ServicioUrlCalendario mediante el contenedor
+    // de Laravel para reutilizarlas durante la operación.
     public function __construct(private ServicioBloqueoCabanas $bloqueo, private ServicioAuditoria $auditoria, private ServicioUrlCalendario $urls) {}
 
+    // Crea una fuente externa inicialmente inactiva después de validar permisos, URL y cabaña. La
+    // creación por sí sola no importa eventos.
     public function fuente(Request $solicitud, array $datos): FuenteCalendario
     {
         Gate::forUser($solicitud->user()->fresh())->authorize('calendario.administrar_fuentes');
@@ -25,6 +32,7 @@ class ServicioGestionCalendario
             $this->urls->validar($datos['url']);
         }
 
+        // Las escrituras de este bloque se confirman juntas; una excepción revierte sus cambios en la base de datos.
         return DB::transaction(function () use ($solicitud, $datos) {
             $cabana = $this->bloqueo->adquirir([$datos['cabana_id']])->get((int) $datos['cabana_id']);
             abort_unless($cabana && ! $cabana->trashed(), 422);
@@ -35,8 +43,11 @@ class ServicioGestionCalendario
         });
     }
 
+    // Activa o suspende una fuente comprobando su versión; reinicia validadores HTTP y comprobaciones
+    // de ausencia sin liberar sus bloqueos.
     public function activar(Request $solicitud, FuenteCalendario $fuente, bool $activa): FuenteCalendario
     {
+        // Las escrituras de este bloque se confirman juntas; una excepción revierte sus cambios en la base de datos.
         return DB::transaction(function () use ($solicitud, $fuente, $activa) {
             $this->bloqueo->adquirir([$fuente->cabana_id]);
             Gate::forUser($solicitud->user()->fresh())->authorize('calendario.administrar_fuentes');
@@ -44,6 +55,7 @@ class ServicioGestionCalendario
             if ($registro->version !== $fuente->version) {
                 throw ValidationException::withMessages(['fuente' => 'La fuente cambió. Vuelve a previsualizar.']);
             }
+            // Conserva los valores previos para describir el cambio en la auditoría.
             $anteriores = $registro->toArray();
             $registro->update(['activa' => $activa, 'version' => $registro->version + 1, 'proxima_consulta' => now(),
                 'etag' => null, 'ultima_modificacion' => null]);
@@ -55,6 +67,8 @@ class ServicioGestionCalendario
         });
     }
 
+    // Edita la configuración y aumenta su versión. La suspende para exigir nueva revisión y conserva
+    // la URL si el formulario la deja vacía.
     public function actualizarFuente(Request $solicitud, FuenteCalendario $fuente, array $datos): void
     {
         Gate::forUser($solicitud->user()->fresh())->authorize('calendario.administrar_fuentes');
@@ -63,12 +77,14 @@ class ServicioGestionCalendario
         } else {
             unset($datos['url']);
         }
+        // Las escrituras de este bloque se confirman juntas; una excepción revierte sus cambios en la base de datos.
         DB::transaction(function () use ($solicitud, $fuente, $datos) {
             $this->bloqueo->adquirir([$fuente->cabana_id]);
             $registro = FuenteCalendario::lockForUpdate()->findOrFail($fuente->id);
             if ($registro->version !== $fuente->version) {
                 throw ValidationException::withMessages(['fuente' => 'La fuente cambió. Recarga sus datos.']);
             }
+            // Conserva los valores previos para describir el cambio en la auditoría.
             $anteriores = $registro->toArray();
             $registro->fill($datos)->forceFill(['activa' => false, 'version' => $registro->version + 1,
                 'etag' => null, 'ultima_modificacion' => null, 'proxima_consulta' => null])->save();
@@ -77,6 +93,7 @@ class ServicioGestionCalendario
         }, 3);
     }
 
+    // Autoriza un bloqueo manual de calendario y delega su creación con período definido.
     public function bloqueo(Request $solicitud, int $cabanaId, string $inicio, string $fin): EventoCalendario
     {
         Gate::forUser($solicitud->user()->fresh())->authorize('calendario.gestionar_bloqueos');
@@ -84,6 +101,8 @@ class ServicioGestionCalendario
         return $this->crearBloqueo($solicitud, $cabanaId, $inicio, $fin);
     }
 
+    // Añade el bloqueo temporal indicado al crear una cabaña o cambiar su estado, usando el permiso
+    // propio de esa operación.
     public function bloqueoEstado(Request $solicitud, Cabana $cabana, array $datos): void
     {
         Gate::forUser($solicitud->user()->fresh())->authorize($cabana->wasRecentlyCreated ? 'cabanas.crear' : 'cabanas.cambiar_estado');
@@ -92,6 +111,8 @@ class ServicioGestionCalendario
         }
     }
 
+    // Valida el intervalo, bloquea la cabaña y crea un evento CEC con UUID y auditoría; no utiliza
+    // consecutivos calculados con max(id).
     private function crearBloqueo(Request $solicitud, int $cabanaId, string $inicio, string $fin): EventoCalendario
     {
 
@@ -101,6 +122,7 @@ class ServicioGestionCalendario
             throw ValidationException::withMessages(['fin' => 'El fin debe ser posterior al inicio del bloqueo.']);
         }
 
+        // Las escrituras de este bloque se confirman juntas; una excepción revierte sus cambios en la base de datos.
         return DB::transaction(function () use ($solicitud, $cabanaId, $desde, $hasta) {
             $cabana = $this->bloqueo->adquirir([$cabanaId])->get($cabanaId);
             abort_unless($cabana && ! $cabana->trashed(), 422);
@@ -113,21 +135,28 @@ class ServicioGestionCalendario
         });
     }
 
+    // Retira un bloqueo local CEC; impide liberar desde aquí eventos que pertenecen a plataformas
+    // externas.
     public function liberar(Request $solicitud, EventoCalendario $evento): void
     {
+        // Las escrituras de este bloque se confirman juntas; una excepción revierte sus cambios en la base de datos.
         DB::transaction(function () use ($solicitud, $evento) {
             $this->bloqueo->adquirir([$evento->cabana_id]);
             Gate::forUser($solicitud->user()->fresh())->authorize('calendario.gestionar_bloqueos');
             $registro = EventoCalendario::lockForUpdate()->findOrFail($evento->id);
             abort_unless($registro->origen === 'cec' && $registro->fuente_id === null, 403, 'Libera este bloqueo en su plataforma de origen.');
+            // Conserva los valores previos para describir el cambio en la auditoría.
             $anteriores = $registro->toArray();
             $registro->update(['bloquea' => false, 'estado' => 'retirado']);
             $this->auditoria->registrarCambio($solicitud, 'calendario', 'bloqueo_liberado', $registro->id, $anteriores, $registro->toArray());
         });
     }
 
+    // Asocia un evento externo a una reservación compatible de la misma cabaña y horarios exactos,
+    // comprobando que ambos estén libres de otro vínculo.
     public function vincular(Request $solicitud, EventoCalendario $evento, Reservacion $reservacion): void
     {
+        // Las escrituras de este bloque se confirman juntas; una excepción revierte sus cambios en la base de datos.
         DB::transaction(function () use ($solicitud, $evento, $reservacion) {
             $this->bloqueo->adquirir([$evento->cabana_id, $reservacion->cabana_id]);
             Gate::forUser($solicitud->user()->fresh())->authorize('calendario.vincular');
@@ -139,16 +168,20 @@ class ServicioGestionCalendario
                 || ! $reserva->salida_prevista->equalTo($registro->fin)) {
                 throw ValidationException::withMessages(['reservacion_id' => 'Vincula una reservación libre de vínculos, de la misma cabaña y fechas exactas.']);
             }
+            // Conserva los valores previos para describir el cambio en la auditoría.
             $anteriores = $registro->toArray();
             $registro->update(['reservacion_id' => $reserva->id, 'discrepancia' => false, 'conflicto' => false]);
             $this->auditoria->registrarCambio($solicitud, 'calendario', 'evento_vinculado', $registro->id, $anteriores, $registro->toArray());
         });
     }
 
+    // Genera un token aleatorio para el feed y almacena solo su hash. Devuelve la URL completa para
+    // que se muestre una sola vez.
     public function enlace(Request $solicitud, array $datos): string
     {
         Gate::forUser($solicitud->user()->fresh())->authorize('calendario.gestionar_enlaces');
         $token = bin2hex(random_bytes(32));
+        // Las escrituras de este bloque se confirman juntas; una excepción revierte sus cambios en la base de datos.
         DB::transaction(function () use ($solicitud, $datos, $token) {
             $enlace = EnlaceCalendario::create($datos + ['token_hash' => hash('sha256', $token)]);
             $this->auditoria->registrarCambio($solicitud, 'calendario', 'enlace_creado', $enlace->id, [], $enlace->toArray());
@@ -157,11 +190,15 @@ class ServicioGestionCalendario
         return route('calendario.feed', ['token' => $token]);
     }
 
+    // Desactiva un enlace de exportación y audita la operación, impidiendo nuevos accesos con ese
+    // token.
     public function revocar(Request $solicitud, EnlaceCalendario $enlace): void
     {
         Gate::forUser($solicitud->user()->fresh())->authorize('calendario.gestionar_enlaces');
+        // Las escrituras de este bloque se confirman juntas; una excepción revierte sus cambios en la base de datos.
         DB::transaction(function () use ($solicitud, $enlace) {
             $registro = EnlaceCalendario::lockForUpdate()->findOrFail($enlace->id);
+            // Conserva los valores previos para describir el cambio en la auditoría.
             $anteriores = $registro->toArray();
             $registro->update(['activo' => false]);
             $this->auditoria->registrarCambio($solicitud, 'calendario', 'enlace_revocado', $registro->id, $anteriores, $registro->toArray());

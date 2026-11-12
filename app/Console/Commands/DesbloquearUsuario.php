@@ -1,5 +1,8 @@
 <?php
 
+// Comando Artisan: Localiza una cuenta bloqueada, restablece su contador y fecha de bloqueo y registra
+// el cambio realizado por consola.
+
 namespace App\Console\Commands;
 
 use App\Models\RegistroAuditoria;
@@ -13,6 +16,8 @@ class DesbloquearUsuario extends Command
 
     protected $description = 'Retira el bloqueo por intentos fallidos de una cuenta';
 
+    // Localiza una cuenta bloqueada, restablece su contador y fecha de bloqueo y registra el cambio
+    // realizado por consola.
     public function handle(): int
     {
         $nombre = $this->argument('usuario');
@@ -30,6 +35,7 @@ class DesbloquearUsuario extends Command
             return self::SUCCESS;
         }
 
+        // Las escrituras de este bloque se confirman juntas; una excepción revierte sus cambios en la base de datos.
         DB::transaction(function () use ($usuario) {
             $anteriores = ['bloqueado_at' => $usuario->bloqueado_at, 'intentos_fallidos' => $usuario->intentos_fallidos];
             $usuario->bloqueado_at = null;

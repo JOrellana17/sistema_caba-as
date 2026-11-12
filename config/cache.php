@@ -1,5 +1,8 @@
 <?php
 
+// Almacenes de caché y prefijos. Los limitadores de acceso y bloqueos de sincronización usan el
+// almacén configurado.
+
 use Illuminate\Support\Str;
 
 return [

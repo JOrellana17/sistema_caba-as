@@ -1,11 +1,16 @@
 <?php
 
+// Validación de entrada HTTP. Valida usuario, estado y fechas del historial; el controlador limita
+// siempre la vista personal a la cuenta autenticada.
+
 namespace App\Http\Requests;
 
 use Illuminate\Validation\Rule;
 
 class ConsultarSesionesRequest extends SolicitudAdministrativa
 {
+    // Valida usuario, estado y fechas del historial; el controlador limita siempre la vista personal a
+    // la cuenta autenticada.
     public function rules(): array
     {
         return [

@@ -1,3 +1,4 @@
+{{-- errors: Presentación de 419. --}}
 @extends('errors.base')
 @section('codigo', '419')
 @section('mensaje', 'La sesión del formulario venció.')

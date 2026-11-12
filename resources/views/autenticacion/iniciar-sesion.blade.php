@@ -1,3 +1,4 @@
+{{-- autenticacion: Presentación de iniciar sesion. --}}
 @extends('layouts.base')
 @section('titulo', 'Iniciar sesión')
 @section('pagina')
@@ -12,13 +13,17 @@
             <h1 id="titulo-acceso" class="h2 mb-2">Iniciar sesión</h1>
             <p class="text-body-secondary mb-4">Ingresa con tu cuenta de personal.</p>
             <x-mensajes />
+            {{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
             <form method="POST" action="{{ route('sesion.iniciar') }}">
+                {{-- Incluye el token de sesión que protege la petición contra envíos desde otros sitios. --}}
                 @csrf
                 <div class="mb-3">
                     <label for="usuario" class="form-label">Usuario o correo</label>
                     <input id="usuario" name="usuario" type="text" class="form-control @error('usuario') is-invalid @enderror"
                         value="{{ is_string(old('usuario')) ? old('usuario') : '' }}" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="255" required
+                        {{-- Presenta el mensaje de validación asociado a este campo. --}}
                         @error('usuario') aria-invalid="true" aria-describedby="error-usuario" @enderror>
+                    {{-- Presenta el mensaje de validación asociado a este campo. --}}
                     @error('usuario') <div id="error-usuario" class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="mb-3">
@@ -32,14 +37,18 @@
                     <label for="contrasena" class="form-label">Contraseña</label>
                     <input id="contrasena" name="contrasena" type="password" class="form-control @error('contrasena') is-invalid @enderror"
                         autocomplete="current-password" maxlength="1024" required
+                        {{-- Presenta el mensaje de validación asociado a este campo. --}}
                         @error('contrasena') aria-invalid="true" aria-describedby="error-contrasena" @enderror>
+                    {{-- Presenta el mensaje de validación asociado a este campo. --}}
                     @error('contrasena') <div id="error-contrasena" class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="mb-3" data-acceso-pin @if (old('metodo') !== 'pin') hidden @endif>
                     <label for="pin" class="form-label">PIN de seis dígitos</label>
                     <input id="pin" name="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off"
                         class="form-control @error('pin') is-invalid @enderror" disabled
+                        {{-- Presenta el mensaje de validación asociado a este campo. --}}
                         @error('pin') aria-invalid="true" aria-describedby="error-pin" @enderror>
+                    {{-- Presenta el mensaje de validación asociado a este campo. --}}
                     @error('pin') <div id="error-pin" class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="form-check mb-4">

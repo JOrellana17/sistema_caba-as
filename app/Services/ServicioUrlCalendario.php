@@ -1,11 +1,16 @@
 <?php
 
+// Servicio de url calendario. Centraliza las operaciones descritas en sus métodos para que los
+// controladores reutilicen las mismas reglas.
+
 namespace App\Services;
 
 use Illuminate\Validation\ValidationException;
 
 class ServicioUrlCalendario
 {
+    // Restringe la URL a HTTPS, puerto 443 y dominios autorizados; rechaza credenciales, fragmentos y
+    // saltos de línea antes de cualquier descarga.
     public function validar(string $url): array
     {
         $partes = parse_url($url);
@@ -20,6 +25,8 @@ class ServicioUrlCalendario
         return ['host' => $host];
     }
 
+    // Resuelve el host validado y exige que todas sus direcciones sean públicas. Devuelve la IP que el
+    // lector fijará durante la conexión.
     public function destino(string $url): array
     {
         $host = $this->validar($url)['host'];
@@ -31,6 +38,8 @@ class ServicioUrlCalendario
         return ['host' => $host, 'ip' => $direcciones[0]];
     }
 
+    // Rechaza rangos privados, reservados, multicast y traducciones de IP no admitidas para reducir el
+    // riesgo de SSRF.
     public function publica(string $ip): bool
     {
         if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
@@ -57,6 +66,8 @@ class ServicioUrlCalendario
             || ($octetos[0] === 198 && in_array($octetos[1], [18, 19], true)));
     }
 
+    // Obtiene registros DNS A y AAAA y devuelve las direcciones únicas; se separa para poder sustituir
+    // el DNS en verificaciones aisladas.
     protected function resolver(string $host): array
     {
         $registros = dns_get_record($host, DNS_A | DNS_AAAA);

@@ -1,3 +1,4 @@
+{{-- views: Presentación de welcome. --}}
 @extends('layouts.base')
 @section('titulo', 'Administración')
 @section('pagina')

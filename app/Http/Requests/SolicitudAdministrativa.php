@@ -1,17 +1,24 @@
 <?php
 
+// Validación de entrada HTTP. Base de mensajes comunes para solicitudes administrativas; la ruta y el
+// servicio comprueban sus permisos explícitos.
+
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
 abstract class SolicitudAdministrativa extends FormRequest
 {
+    // Admite validar esta solicitud; los permisos de la operación se comprueban por la ruta y el
+    // servicio.
     public function authorize(): bool
     {
         // Cada ruta declara su permiso y el servicio lo revalida en la transacción.
         return true;
     }
 
+    // Define mensajes legibles en español para los errores de validación; las claves corresponden a
+    // campos o reglas de Laravel.
     public function messages(): array
     {
         return [

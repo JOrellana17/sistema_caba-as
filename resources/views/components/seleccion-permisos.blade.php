@@ -1,4 +1,7 @@
+{{-- components: Presentación de seleccion permisos. --}}
+{{-- Entradas del componente y valores por defecto; los atributos adicionales proceden de la vista que lo utiliza. --}}
 @props(['permisos', 'seleccionados' => []])
+{{-- Agrupa campos relacionados bajo una misma sección del formulario. --}}
 <fieldset>
     <legend class="h6">Permisos disponibles</legend>
     <div class="row g-2 mb-3">

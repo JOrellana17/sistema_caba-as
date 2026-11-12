@@ -1,3 +1,5 @@
+{{-- components: Presentación de condicion huesped. --}}
+{{-- Entradas del componente y valores por defecto; los atributos adicionales proceden de la vista que lo utiliza. --}}
 @props(['huesped'])
 @if (! $huesped->activo)<span class="badge text-bg-warning">Inactivo</span>@endif
 @if ($huesped->lista_negra)<span class="badge text-bg-danger">Lista negra</span>@endif

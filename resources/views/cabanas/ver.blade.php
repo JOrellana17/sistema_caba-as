@@ -1,9 +1,12 @@
+{{-- cabanas: Detalle del registro y operaciones disponibles para el usuario actual. --}}
 @extends('layouts.administracion')
 @section('titulo', $cabana->nombre)
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <h1 class="h3 mb-0">{{ $cabana->nombre }}</h1>
     <div class="d-flex gap-2">
+        {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
         @can('cabanas.editar')<a class="btn btn-primary" href="{{ route('cabanas.editar', $cabana) }}">Editar datos</a>@endcan
         <a class="btn btn-outline-secondary" href="{{ route('cabanas.listar') }}">Volver al listado</a>
     </div>
@@ -37,7 +40,9 @@
             <p>{{ \App\Models\Cabana::ESTADOS[$cabana->estado] }} · {{ $cabana->activa ? 'Activa' : 'Inactiva' }}</p>
             <p><span class="badge {{ $cabana->en_aseo ? 'text-bg-warning' : 'text-bg-secondary' }}">{{ $cabana->en_aseo ? 'En aseo' : 'Sin aseo pendiente' }}</span></p>
             <p class="text-body-secondary">El estado operativo no confirma disponibilidad para unas fechas.</p>
+            {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
             @can('cabanas.cambiar_estado')
+                {{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
                 <form method="POST" action="{{ route('cabanas.estado', $cabana) }}">
                     @csrf @method('PUT')
                     <x-estado-cabana :cabana="$cabana" />
@@ -45,10 +50,12 @@
                 </form>
             @endcan
         </section>
+        {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
         @can('cabanas.eliminar')
             <section class="card card-body">
                 <h2 class="h5">Eliminar cabaña</h2>
                 <p>Se ocultará del catálogo. Sus datos se conservarán para una posible restauración.</p>
+                {{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
                 <form method="POST" action="{{ route('cabanas.eliminar', $cabana) }}" data-confirmar="¿Eliminar esta cabaña del catálogo? Sus datos se conservarán.">
                     @csrf @method('DELETE')
                     <button class="btn btn-outline-danger" type="submit">Eliminar cabaña</button>

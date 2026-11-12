@@ -1,5 +1,8 @@
 <?php
 
+// Controlador HTTP de Aseo. Coordina solicitudes, servicios y respuestas; las rutas declaran los
+// permisos de cada operación.
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ConfirmarAseoRequest;
@@ -11,6 +14,8 @@ use Illuminate\View\View;
 
 class AseoController extends Controller
 {
+    // Carga cabañas con ciclos pendientes y último aseo en consultas anticipadas, priorizando las que
+    // requieren atención.
     public function listar(): View
     {
         $cabanas = Cabana::select(['id', 'nombre', 'estado', 'activa'])
@@ -24,6 +29,8 @@ class AseoController extends Controller
         return view('aseo.listar', compact('cabanas'));
     }
 
+    // Solicita confirmar el ciclo y diferencia una confirmación nueva de una ya realizada, sin liberar
+    // otras causas de bloqueo.
     public function confirmar(ConfirmarAseoRequest $solicitud, AseoCabana $aseo, ServicioAseoCabanas $servicio): RedirectResponse
     {
         $confirmado = $servicio->confirmar($solicitud, $aseo);

@@ -1,5 +1,8 @@
 <?php
 
+// Servicio de lectura calendario. Centraliza las operaciones descritas en sus métodos para que los
+// controladores reutilicen las mismas reglas.
+
 namespace App\Services;
 
 use App\Models\FuenteCalendario;
@@ -12,8 +15,12 @@ use Throwable;
 
 class ServicioLecturaCalendario
 {
+    // Recibe ServicioUrlCalendario mediante el contenedor de Laravel para reutilizarlas durante la
+    // operación.
     public function __construct(private ServicioUrlCalendario $urls) {}
 
+    // Descarga el ICS por HTTPS fijando la IP pública ya validada, sin redirecciones ni proxy. Limita
+    // tiempo y bytes recibidos, aprovecha ETag y oculta la URL privada en los errores.
     public function descargar(FuenteCalendario $fuente): array
     {
         if (! extension_loaded('curl')) {

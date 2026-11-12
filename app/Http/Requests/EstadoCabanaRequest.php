@@ -1,5 +1,8 @@
 <?php
 
+// Validación de entrada HTTP. Valida estado, activación y período de bloqueo; los datos de tarifa e
+// imagen pertenecen a otras operaciones.
+
 namespace App\Http\Requests;
 
 use App\Models\Cabana;
@@ -7,6 +10,8 @@ use Illuminate\Validation\Rule;
 
 class EstadoCabanaRequest extends SolicitudAdministrativa
 {
+    // Valida estado, activación y período de bloqueo; los datos de tarifa e imagen pertenecen a otras
+    // operaciones.
     public function rules(): array
     {
         return [
@@ -17,6 +22,8 @@ class EstadoCabanaRequest extends SolicitudAdministrativa
         ];
     }
 
+    // Define mensajes legibles en español para los errores de validación; las claves corresponden a
+    // campos o reglas de Laravel.
     public function messages(): array
     {
         return array_merge(parent::messages(), ['in' => 'Selecciona un estado operativo permitido.']);

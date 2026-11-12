@@ -1,3 +1,4 @@
+{{-- errors: Presentación de 403. --}}
 @extends('errors.base')
 @section('codigo', '403')
 @section('mensaje', 'No tienes permiso para realizar esta operación.')

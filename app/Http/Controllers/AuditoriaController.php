@@ -1,5 +1,8 @@
 <?php
 
+// Controlador HTTP de Auditoria. Coordina solicitudes, servicios y respuestas; las rutas declaran los
+// permisos de cada operación.
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ConsultarAuditoriaRequest;
@@ -9,8 +12,11 @@ use Illuminate\View\View;
 
 class AuditoriaController extends Controller
 {
+    // Consulta y pagina los registros de Auditoria para su listado; conserva el orden y los filtros
+    // definidos en esta acción.
     public function listar(ConsultarAuditoriaRequest $solicitud): View
     {
+        // Usa solo los filtros aprobados por el Form Request, no todos los parámetros recibidos.
         $filtros = $solicitud->validated();
         $consulta = RegistroAuditoria::with('usuario:id,nombre,deleted_at');
         foreach (['modulo', 'accion', 'usuario_id'] as $campo) {
@@ -31,6 +37,7 @@ class AuditoriaController extends Controller
         ]);
     }
 
+    // Carga el detalle de Auditoria y sus relaciones necesarias para presentar la ficha.
     public function ver(RegistroAuditoria $registro): View
     {
         $registro->load('usuario:id,nombre,deleted_at');

@@ -1,5 +1,8 @@
 <?php
 
+// Controlador HTTP de Inicio. Coordina solicitudes, servicios y respuestas; las rutas declaran los
+// permisos de cada operación.
+
 namespace App\Http\Controllers;
 
 use App\Models\Reservacion;
@@ -10,6 +13,8 @@ use Illuminate\View\View;
 
 class InicioController extends Controller
 {
+    // Dirige al Aseador a su pantalla y muestra próximas reservaciones al personal autorizado,
+    // agrupadas por día y con datos de huéspedes limitados por permisos.
     public function ver(Request $solicitud): View|RedirectResponse
     {
         if ($solicitud->user()->esAseador()) {

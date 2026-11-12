@@ -1,5 +1,8 @@
 <?php
 
+// Servicio de auditoria. Centraliza las operaciones descritas en sus métodos para que los
+// controladores reutilicen las mismas reglas.
+
 namespace App\Services;
 
 use App\Models\RegistroAuditoria;
@@ -10,6 +13,8 @@ use Illuminate\Support\Str;
 
 class ServicioAuditoria
 {
+    // Guarda actor, acción, registro y valores anteriores/nuevos permitidos para el módulo. La lista
+    // de campos evita persistir contraseñas, PIN o secretos.
     public function registrarCambio(Request $solicitud, string $modulo, string $accion, int $registroId, array $anteriores = [], array $nuevos = []): void
     {
         $campos = ['nombre', 'usuario', 'activo', 'intentos_fallidos', 'bloqueado_at', 'codigo', 'descripcion', 'roles', 'permisos', 'deleted_at'];
@@ -45,6 +50,8 @@ class ServicioAuditoria
         ]);
     }
 
+    // Registra un evento de autenticación con IP y navegador, sin incluir la credencial presentada. El
+    // usuario puede ser desconocido en un fallo.
     public function registrarAcceso(string $accion, Request $solicitud, ?Usuario $usuario = null): void
     {
         RegistroAuditoria::create([

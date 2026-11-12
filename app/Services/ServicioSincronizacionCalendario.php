@@ -1,5 +1,8 @@
 <?php
 
+// Servicio de sincronizacion calendario. Centraliza las operaciones descritas en sus métodos para que
+// los controladores reutilicen las mismas reglas.
+
 namespace App\Services;
 
 use App\Models\EventoCalendario;
@@ -15,6 +18,8 @@ use Throwable;
 
 class ServicioSincronizacionCalendario
 {
+    // Recibe ServicioLecturaCalendario, ServicioArchivoCalendario, ServicioBloqueoCabanas,
+    // ServicioAuditoria mediante el contenedor de Laravel para reutilizarlas durante la operación.
     public function __construct(
         private ServicioLecturaCalendario $lector,
         private ServicioArchivoCalendario $archivos,
@@ -22,6 +27,8 @@ class ServicioSincronizacionCalendario
         private ServicioAuditoria $auditoria,
     ) {}
 
+    // Evita lecturas simultáneas de una fuente con un bloqueo de caché. Revalida su versión, descarga
+    // y aplica eventos; ante errores conserva la ocupación y programa un nuevo intento.
     public function sincronizar(FuenteCalendario $fuente): bool
     {
         return (bool) Cache::lock('ical-fuente-'.$fuente->id, 120)->get(function () use ($fuente) {
@@ -49,6 +56,7 @@ class ServicioSincronizacionCalendario
 
                 return true;
             } catch (Throwable) {
+                // Las escrituras de este bloque se confirman juntas; una excepción revierte sus cambios en la base de datos.
                 DB::transaction(function () use ($fuente) {
                     $this->bloqueo->adquirir([$fuente->cabana_id]);
                     $actual = FuenteCalendario::lockForUpdate()->find($fuente->id);
@@ -66,9 +74,12 @@ class ServicioSincronizacionCalendario
         });
     }
 
+    // Reconcilia eventos por fuente y hash del UID en una transacción. Detecta conflictos y solo
+    // libera ausencias comprobadas por URL en dos lecturas separadas dentro de cobertura.
     public function aplicar(FuenteCalendario $fuente, string $contenido, ?Request $solicitud = null, array $lectura = []): void
     {
         $eventos = $this->archivos->analizar($contenido, $fuente->interpretacion_fechas, $fuente->zona_horaria);
+        // Las escrituras de este bloque se confirman juntas; una excepción revierte sus cambios en la base de datos.
         DB::transaction(function () use ($fuente, $eventos, $solicitud, $lectura) {
             $this->bloqueo->adquirir([$fuente->cabana_id]);
             $actual = FuenteCalendario::lockForUpdate()->findOrFail($fuente->id);
@@ -94,6 +105,7 @@ class ServicioSincronizacionCalendario
                     && (! $registro->inicio->equalTo($datos['inicio']) || ! $registro->fin->equalTo($datos['fin']))) {
                     throw new RuntimeException('Un archivo no puede cambiar un bloqueo externo existente. Comprueba el cambio leyendo la URL de origen.');
                 }
+                // Conserva los valores previos para describir el cambio en la auditoría.
                 $anteriores = $registro->toArray();
                 $registro->fill(['cabana_id' => $actual->cabana_id, 'origen' => $actual->proveedor,
                     'uid' => $datos['uid'], 'inicio' => $datos['inicio'], 'fin' => $datos['fin'],
@@ -133,6 +145,7 @@ class ServicioSincronizacionCalendario
                 if ($ausente->ausente_desde->addMinutes(config('icalendario.intervalo_minutos'))->greaterThan($ahora)) {
                     continue;
                 }
+                // Conserva los valores previos para describir el cambio en la auditoría.
                 $anteriores = $ausente->toArray();
                 $ausente->update(['bloquea' => false, 'estado' => 'retirado', 'ausencias' => 2, 'discrepancia' => $ausente->reservacion_id !== null]);
                 $retirados++;
@@ -144,6 +157,8 @@ class ServicioSincronizacionCalendario
         }, 3);
     }
 
+    // Clasifica eventos como nuevos, existentes, modificados o copias propias y señala conflictos, sin
+    // escribir cambios de disponibilidad.
     public function previsualizar(FuenteCalendario $fuente, array $eventos): array
     {
         $anteriores = $fuente->eventos()->get()->keyBy('identidad');
@@ -167,6 +182,8 @@ class ServicioSincronizacionCalendario
         return $eventos;
     }
 
+    // Reconoce UID originados por CEC, incluso de reservaciones eliminadas, para evitar reimportar
+    // ecos del mismo calendario.
     private function esPropio(string $uid): bool
     {
         if (preg_match('/^cec-reserva-([a-f0-9-]{36})@calendario\.cec$/D', $uid, $coincidencia)) {
@@ -176,6 +193,8 @@ class ServicioSincronizacionCalendario
         return EventoCalendario::where('origen', 'cec')->where('identidad', hash('sha256', $uid))->exists();
     }
 
+    // Selecciona los campos operativos que deben cambiar para generar una auditoría de sincronización;
+    // excluye actualizaciones puramente técnicas.
     private function resumen(array $datos): array
     {
         return array_intersect_key($datos, array_flip(['inicio', 'fin', 'bloquea', 'estado', 'conflicto', 'discrepancia']));

@@ -1,5 +1,7 @@
 <?php
 
+// Middleware de versión de credenciales, actividad de sesión y respuestas privadas.
+
 namespace App\Http\Middleware;
 
 use App\Services\ServicioSesiones;
@@ -10,8 +12,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RegistrarSesionUsuario
 {
+    // Recibe ServicioSesiones mediante el contenedor de Laravel para reutilizarlas durante la
+    // operación.
     public function __construct(private ServicioSesiones $sesiones) {}
 
+    // Compara la versión de credenciales para rechazar sesiones antiguas; registra la actividad de las
+    // admitidas y evita que la respuesta autenticada quede en caché.
     public function handle(Request $solicitud, Closure $siguiente): Response
     {
         $usuario = $solicitud->user();

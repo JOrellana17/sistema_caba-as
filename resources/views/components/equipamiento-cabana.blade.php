@@ -1,4 +1,7 @@
+{{-- components: Presentación de equipamiento cabana. --}}
+{{-- Entradas del componente y valores por defecto; los atributos adicionales proceden de la vista que lo utiliza. --}}
 @props(['cabana'])
+{{-- Prepara valores de presentación antes de renderizar este bloque. --}}
 @php
     $cantidadesCamas = $cabana->cantidadesCamas() ?? [];
     $tiposPresentes = array_filter(\App\Models\Cabana::TIPOS_CAMA, fn ($tipo) => ($cantidadesCamas[$tipo] ?? 0) > 0, ARRAY_FILTER_USE_KEY);

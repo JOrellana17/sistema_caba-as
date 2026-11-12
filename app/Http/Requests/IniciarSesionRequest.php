@@ -1,16 +1,22 @@
 <?php
 
+// Validación de entrada HTTP. Valida usuario o correo y únicamente la contraseña o PIN seleccionado.
+// El contador y el bloqueo se comprueban después en el servicio.
+
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
 class IniciarSesionRequest extends FormRequest
 {
+    // Permite validar el formulario público de acceso sin exigir una sesión previa.
     public function authorize(): bool
     {
         return true;
     }
 
+    // Valida usuario o correo y únicamente la contraseña o PIN seleccionado. El contador y el bloqueo
+    // se comprueban después en el servicio.
     public function rules(): array
     {
         return [
@@ -22,6 +28,8 @@ class IniciarSesionRequest extends FormRequest
         ];
     }
 
+    // Define mensajes legibles en español para los errores de validación; las claves corresponden a
+    // campos o reglas de Laravel.
     public function messages(): array
     {
         return [

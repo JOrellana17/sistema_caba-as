@@ -1,3 +1,4 @@
+{{-- errors: Presentación de base. --}}
 @extends('layouts.base')
 @section('titulo', 'No se pudo completar la solicitud')
 @section('pagina')

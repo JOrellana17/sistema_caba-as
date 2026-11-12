@@ -1,5 +1,8 @@
 <?php
 
+// Servicio de administracion. Centraliza las operaciones descritas en sus métodos para que los
+// controladores reutilicen las mismas reglas.
+
 namespace App\Services;
 
 use App\Models\Permiso;
@@ -14,14 +17,20 @@ use Illuminate\Validation\ValidationException;
 
 class ServicioAdministracion
 {
+    // Recibe ServicioAuditoria, ServicioSesiones mediante el contenedor de Laravel para reutilizarlas
+    // durante la operación.
     public function __construct(private ServicioAuditoria $auditoria, private ServicioSesiones $sesiones) {}
 
+    // Agrupa la operación y su auditoría en una transacción. Bloquea el rol administrador y relee al
+    // actor para evitar cambios concurrentes de privilegios.
     private function ejecutar(Request $solicitud, string $permiso, Closure $operacion): mixed
     {
+        // Las escrituras de este bloque se confirman juntas; una excepción revierte sus cambios en la base de datos.
         return DB::transaction(function () use ($solicitud, $permiso, $operacion) {
             // Un mismo bloqueo serializa las modificaciones de privilegios.
             // InnoDB conserva el bloqueo del rol hasta finalizar la transacción.
             Rol::where('codigo', 'administrador')->update(['updated_at' => now()]);
+            // Consulta los privilegios actuales del actor antes de ejecutar una modificación.
             $actor = $solicitud->user()->fresh();
             abort_unless($actor, 403);
             Gate::forUser($actor)->authorize($permiso);
@@ -30,12 +39,16 @@ class ServicioAdministracion
         }, 3);
     }
 
+    // Impide que un operador sin rol administrador modifique una cuenta que tiene ese rol, incluso si
+    // la cuenta está inactiva.
     private function protegerCuenta(Usuario $actor, Usuario $usuario): void
     {
         $tieneRolAdministrador = $usuario->exists && $usuario->roles()->where('codigo', 'administrador')->exists();
         abort_if($tieneRolAdministrador && ! $actor->esAdministrador(), 403);
     }
 
+    // Rechaza la operación si dejaría al sistema sin un administrador activo; la transacción permite
+    // revertir el cambio.
     private function conservarAdministrador(): void
     {
         if (! Usuario::where('activo', true)->whereHas('roles', fn ($consulta) => $consulta->where('codigo', 'administrador'))->exists()) {
@@ -43,6 +56,8 @@ class ServicioAdministracion
         }
     }
 
+    // Comprueba que los permisos seleccionados existen y que el actor los posee; no permite conceder
+    // facultades superiores a las propias.
     private function comprobarPermisos(Usuario $actor, array $identificadores): void
     {
         $permisos = Permiso::whereIn('id', $identificadores)->get();
@@ -54,12 +69,15 @@ class ServicioAdministracion
         }
     }
 
+    // Crea o actualiza datos de una cuenta con autorización y auditoría. Solo el alta admite un PIN
+    // inicial; los roles se asignan por otra operación.
     public function guardarUsuario(Request $solicitud, array $datos, ?Usuario $usuario = null): Usuario
     {
         return $this->ejecutar($solicitud, $usuario ? 'usuarios.editar' : 'usuarios.crear', function (Usuario $actor) use ($solicitud, $datos, $usuario) {
             $nuevo = ! $usuario;
             $usuario = $usuario ? Usuario::findOrFail($usuario->id) : new Usuario;
             $this->protegerCuenta($actor, $usuario);
+            // Conserva los valores previos para describir el cambio en la auditoría.
             $anteriores = $usuario->toArray();
             $usuario->fill($datos);
             if ($nuevo && ! empty($datos['pin'])) {
@@ -72,6 +90,8 @@ class ServicioAdministracion
         });
     }
 
+    // Activa o desactiva la cuenta. Al desactivarla rota el recuerdo y revoca sesiones, preservando al
+    // menos un administrador activo.
     public function cambiarEstado(Request $solicitud, Usuario $usuario, bool $activo): void
     {
         $this->ejecutar($solicitud, 'usuarios.cambiar_estado', function (Usuario $actor) use ($solicitud, $usuario, $activo) {
@@ -90,6 +110,8 @@ class ServicioAdministracion
         });
     }
 
+    // Retira la fecha de bloqueo y reinicia los intentos fallidos, dejando constancia de quién
+    // autorizó el desbloqueo.
     public function desbloquear(Request $solicitud, Usuario $usuario): void
     {
         $this->ejecutar($solicitud, 'usuarios.cambiar_estado', function (Usuario $actor) use ($solicitud, $usuario) {
@@ -103,6 +125,8 @@ class ServicioAdministracion
         });
     }
 
+    // Desactiva y elimina lógicamente una cuenta, revoca sus sesiones y conserva el historial y la
+    // protección del último administrador.
     public function eliminarUsuario(Request $solicitud, Usuario $usuario): void
     {
         $this->ejecutar($solicitud, 'usuarios.eliminar', function (Usuario $actor) use ($solicitud, $usuario) {
@@ -119,6 +143,8 @@ class ServicioAdministracion
         });
     }
 
+    // Restablece la contraseña mediante su permiso específico. Retira el PIN anterior, revoca sesiones
+    // y elimina el bloqueo de acceso.
     public function cambiarContrasena(Request $solicitud, Usuario $usuario, string $contrasena): void
     {
         $this->ejecutar($solicitud, 'usuarios.restablecer_contrasena', function (Usuario $actor) use ($solicitud, $usuario, $contrasena) {
@@ -137,6 +163,8 @@ class ServicioAdministracion
         });
     }
 
+    // Restablece o retira el PIN autorizado. Cambia la versión de credenciales y revoca las sesiones
+    // sin guardar secretos en la auditoría.
     public function cambiarPin(Request $solicitud, Usuario $usuario, ?string $pin): void
     {
         $this->ejecutar($solicitud, 'usuarios.restablecer_pin', function (Usuario $actor) use ($solicitud, $usuario, $pin) {
@@ -151,6 +179,8 @@ class ServicioAdministracion
         });
     }
 
+    // Reemplaza los roles seleccionados comprobando permisos, protección del administrador y
+    // exclusividad del rol Aseador.
     public function asignarRoles(Request $solicitud, Usuario $usuario, array $roles): void
     {
         $this->ejecutar($solicitud, 'usuarios.gestionar_roles', function (Usuario $actor) use ($solicitud, $usuario, $roles) {
@@ -174,6 +204,8 @@ class ServicioAdministracion
         });
     }
 
+    // Reemplaza los permisos directos sin alterar los heredados por roles. Impide asignaciones
+    // incompatibles con el rol Aseador.
     public function asignarPermisos(Request $solicitud, Usuario $usuario, array $permisos): void
     {
         $this->ejecutar($solicitud, 'usuarios.gestionar_permisos', function (Usuario $actor) use ($solicitud, $usuario, $permisos) {
@@ -189,6 +221,8 @@ class ServicioAdministracion
         });
     }
 
+    // Crea o edita un rol ordinario; los códigos de Administrador y Aseador están reservados y
+    // protegidos.
     public function guardarRol(Request $solicitud, array $datos, ?Rol $rol = null): Rol
     {
         return $this->ejecutar($solicitud, $rol ? 'roles.editar' : 'roles.crear', function () use ($solicitud, $datos, $rol) {
@@ -200,6 +234,7 @@ class ServicioAdministracion
             if ($rol->codigo === 'aseador' || $datos['codigo'] === 'aseador') {
                 throw ValidationException::withMessages(['codigo' => 'El rol Aseador está protegido.']);
             }
+            // Conserva los valores previos para describir el cambio en la auditoría.
             $anteriores = $rol->toArray();
             $rol->fill($datos)->save();
             $this->auditoria->registrarCambio($solicitud, 'roles', $nuevo ? 'creado' : 'actualizado', $rol->id, $anteriores, $rol->toArray());
@@ -208,6 +243,8 @@ class ServicioAdministracion
         });
     }
 
+    // Elimina físicamente un rol ordinario solamente si no está asignado a ninguna cuenta, incluidas
+    // las eliminadas lógicamente.
     public function eliminarRol(Request $solicitud, Rol $rol): void
     {
         $this->ejecutar($solicitud, 'roles.eliminar', function () use ($solicitud, $rol) {
@@ -220,6 +257,8 @@ class ServicioAdministracion
         });
     }
 
+    // Actualiza los permisos de un rol ordinario sin permitir que el actor conceda o retire facultades
+    // que no posee.
     public function permisosRol(Request $solicitud, Rol $rol, array $permisos): void
     {
         $this->ejecutar($solicitud, 'roles.gestionar_permisos', function (Usuario $actor) use ($solicitud, $rol, $permisos) {
@@ -239,6 +278,8 @@ class ServicioAdministracion
         });
     }
 
+    // Guarda un código y su descripción. Protege códigos en uso y asocia los nuevos al administrador;
+    // crear un código no implementa una función.
     public function guardarPermiso(Request $solicitud, array $datos, ?Permiso $permiso = null): Permiso
     {
         return $this->ejecutar($solicitud, $permiso ? 'permisos.editar' : 'permisos.crear', function () use ($solicitud, $datos, $permiso) {
@@ -247,6 +288,7 @@ class ServicioAdministracion
             if ($permiso->exists && $datos['codigo'] !== $permiso->codigo && ($permiso->protegido || $permiso->roles()->where('codigo', '!=', 'administrador')->exists() || $permiso->usuarios()->withTrashed()->exists())) {
                 throw ValidationException::withMessages(['codigo' => 'No se puede renombrar un permiso del sistema o en uso.']);
             }
+            // Conserva los valores previos para describir el cambio en la auditoría.
             $anteriores = $permiso->toArray();
             $permiso->fill($datos)->save();
             if ($nuevo) {
@@ -258,6 +300,8 @@ class ServicioAdministracion
         });
     }
 
+    // Retira un permiso no protegido ni asignado al personal; elimina sus asociaciones al rol
+    // administrador y conserva la auditoría.
     public function eliminarPermiso(Request $solicitud, Permiso $permiso): void
     {
         $this->ejecutar($solicitud, 'permisos.eliminar', function () use ($solicitud, $permiso) {

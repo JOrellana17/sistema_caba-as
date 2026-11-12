@@ -1,5 +1,8 @@
 <?php
 
+// Controlador HTTP de Calendario. Coordina solicitudes, servicios y respuestas; las rutas declaran los
+// permisos de cada operación.
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ConsultarCalendarioRequest;
@@ -12,8 +15,11 @@ use Illuminate\View\View;
 
 class CalendarioController extends Controller
 {
+    // Consulta reservaciones y eventos que intersectan el mes local, aplica filtros y agrupa por día.
+    // Limita el volumen y distingue discrepancias de vínculos externos.
     public function ver(ConsultarCalendarioRequest $solicitud): View
     {
+        // Usa solo los filtros aprobados por el Form Request, no todos los parámetros recibidos.
         $filtros = $solicitud->validated();
         $mes = CarbonImmutable::createFromFormat('!Y-m', $filtros['mes'] ?? now(ServicioDisponibilidad::ZONA_HORARIA)->format('Y-m'), ServicioDisponibilidad::ZONA_HORARIA);
         $fin = $mes->addMonth();

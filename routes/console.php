@@ -1,5 +1,8 @@
 <?php
 
+// Comandos de consola y tareas programadas. Requieren un programador activo para ejecutarse
+// automáticamente.
+
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;

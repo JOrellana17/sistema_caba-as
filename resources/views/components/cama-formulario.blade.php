@@ -1,4 +1,7 @@
+{{-- components: Presentación de cama formulario. --}}
+{{-- Entradas del componente y valores por defecto; los atributos adicionales proceden de la vista que lo utiliza. --}}
 @props(['indice', 'tipo' => '', 'abierta' => false])
+{{-- Prepara valores de presentación antes de renderizar este bloque. --}}
 @php
     $numero = is_int($indice) ? $indice + 1 : '__NUMERO__';
     $campo = 'tipos_camas.'.$indice;

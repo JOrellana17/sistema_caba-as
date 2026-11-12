@@ -1,3 +1,4 @@
+{{-- errors: Presentación de 500. --}}
 @extends('errors.base')
 @section('codigo', '500')
 @section('mensaje', 'No pudimos completar la solicitud.')

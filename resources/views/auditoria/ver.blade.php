@@ -1,5 +1,7 @@
+{{-- auditoria: Detalle del registro y operaciones disponibles para el usuario actual. --}}
 @extends('layouts.administracion')
 @section('titulo', 'Registro de auditoría')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <h1 class="h2 mb-4">Registro de auditoría #{{ $registro->id }}</h1>
 <div class="card border-0 shadow-sm"><div class="card-body">

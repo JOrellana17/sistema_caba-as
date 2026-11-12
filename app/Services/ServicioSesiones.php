@@ -1,5 +1,8 @@
 <?php
 
+// Servicio de sesiones. Centraliza las operaciones descritas en sus métodos para que los controladores
+// reutilicen las mismas reglas.
+
 namespace App\Services;
 
 use App\Models\SesionUsuario;
@@ -10,12 +13,16 @@ use Illuminate\Support\Str;
 
 class ServicioSesiones
 {
+    // Marca como vencidas las sesiones cuyo límite de inactividad pasó. Usa el vencimiento previsto
+    // como fecha calculada, no como cierre observado del navegador.
     public function vencer(): void
     {
         SesionUsuario::where('estado', 'activa')->where('vence_en', '<=', now())
             ->update(['estado' => 'vencida', 'finalizada_en' => DB::raw('vence_en'), 'motivo' => 'Inactividad (vencimiento calculado)']);
     }
 
+    // Crea el historial de la sesión identificada por su hash o actualiza su actividad. Conserva el
+    // origen observado y la versión de credenciales, sin almacenar un token de acceso utilizable.
     public function registrar(Request $solicitud, string $origen = 'observada'): void
     {
         $usuario = $solicitud->user();
@@ -36,6 +43,8 @@ class ServicioSesiones
         $solicitud->session()->put('version_credenciales', $usuario->version_credenciales);
     }
 
+    // Finaliza el historial de la sesión actual si todavía está activa, indicando cierre normal o
+    // revocación y su motivo.
     public function cerrar(Request $solicitud, string $estado = 'cerrada', string $motivo = 'Cierre de sesión'): void
     {
         $this->vencer();
@@ -43,6 +52,8 @@ class ServicioSesiones
             ->update(['estado' => $estado, 'motivo' => $motivo, 'finalizada_en' => now()]);
     }
 
+    // Revoca el historial activo de una cuenta y retira sus sesiones técnicas cuando se usa el almacén
+    // de base de datos.
     public function revocar(Usuario $usuario, string $motivo): void
     {
         $this->vencer();

@@ -1,7 +1,10 @@
+{{-- huespedes: Formulario reutilizado para alta y edición; conserva entradas tras errores de validación. --}}
 @extends('layouts.administracion')
 @section('titulo', $huesped->exists ? 'Editar huésped' : 'Nuevo huésped')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <h1 class="h3 mb-4">{{ $huesped->exists ? 'Editar huésped' : 'Nuevo huésped' }}</h1>
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form method="POST" action="{{ $huesped->exists ? route('huespedes.actualizar', $huesped) : route('huespedes.guardar') }}" class="card card-body">
     @csrf @if ($huesped->exists) @method('PUT') @endif
     <x-campo nombre="nombre" etiqueta="Nombre completo" :valor="$huesped->nombre" maxlength="150" autocomplete="name" required />
@@ -15,13 +18,16 @@
         <input type="hidden" name="vip" value="0">
         <input id="vip" name="vip" value="1" type="checkbox" class="form-check-input" @checked(in_array(old('vip', $huesped->vip), [1, '1', true], true))>
         <label for="vip" class="form-check-label">VIP</label>
+        {{-- Presenta el mensaje de validación asociado a este campo. --}}
         @error('vip')<p class="text-danger">{{ $message }}</p>@enderror
     </div>
     @foreach (['notas' => 'Notas internas', 'notas_incidentes' => 'Notas de incidentes'] as $campo => $etiqueta)
         <div class="mb-3">
             <label for="{{ $campo }}" class="form-label">{{ $etiqueta }}</label>
             <textarea id="{{ $campo }}" name="{{ $campo }}" rows="3" maxlength="5000" class="form-control @error($campo) is-invalid @enderror"
+                {{-- Presenta el mensaje de validación asociado a este campo. --}}
                 @error($campo) aria-invalid="true" aria-describedby="error-{{ $campo }}" @enderror>{{ is_string(old($campo, $huesped->{$campo})) ? old($campo, $huesped->{$campo}) : '' }}</textarea>
+            {{-- Presenta el mensaje de validación asociado a este campo. --}}
             @error($campo)<div class="invalid-feedback" id="error-{{ $campo }}">{{ $message }}</div>@enderror
         </div>
     @endforeach

@@ -1,5 +1,7 @@
+{{-- calendario: Detalle del registro y operaciones disponibles para el usuario actual. --}}
 @extends('layouts.administracion')
 @section('titulo', 'Calendario')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <h1 class="h3 mb-0">Calendario</h1>
@@ -7,6 +9,7 @@
         <a class="btn btn-outline-primary" href="{{ route('calendario.fuentes') }}">Fuentes e importar</a>
     @endcanany
 </div>
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form method="GET" action="{{ route('calendario.ver') }}" class="card card-body mb-4">
     <div class="row g-3">
         <div class="col-md-3"><label for="mes" class="form-label">Mes</label><input class="form-control" id="mes" type="month" name="mes" value="{{ $mes->format('Y-m') }}" required></div>
@@ -34,6 +37,7 @@
                         <strong>{{ $reservacion->cabana?->nombre ?? 'Cabaña por revisar' }}</strong><br>
                         <x-estado-reservacion :estado="$reservacion->estado" />
                         @if ($reservacion->eventoCalendario)<span class="badge text-bg-info">{{ strtoupper($reservacion->eventoCalendario->origen) }} · bloqueo externo</span>@endif
+                        {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
                         @can('reservaciones.ver')<a class="d-block mt-1" href="{{ route('reservaciones.ver', $reservacion) }}">Ver reservación<span class="visually-hidden"> {{ $reservacion->codigo }}</span></a>@endcan
                     </div>
                 @endforeach

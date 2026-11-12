@@ -1,5 +1,8 @@
 <?php
 
+// Controlador HTTP de FuenteCalendario. Coordina solicitudes, servicios y respuestas; las rutas
+// declaran los permisos de cada operación.
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ActualizarFuenteCalendarioRequest;
@@ -23,8 +26,12 @@ use Throwable;
 
 class FuenteCalendarioController extends Controller
 {
+    // Recibe ServicioGestionCalendario mediante el contenedor de Laravel para reutilizarlas durante la
+    // operación.
     public function __construct(private ServicioGestionCalendario $gestion) {}
 
+    // Presenta fuentes e historial de sincronizaciones solo a quienes tienen alguna facultad de
+    // gestión de calendario.
     public function listar(): View
     {
         abort_unless(Gate::any(['calendario.administrar_fuentes', 'calendario.importar', 'calendario.gestionar_bloqueos', 'calendario.sincronizar']), 403);
@@ -36,6 +43,8 @@ class FuenteCalendarioController extends Controller
         ]);
     }
 
+    // Entrega los datos validados de FuenteCalendario al servicio responsable de guardarlos y devuelve
+    // la respuesta de confirmación.
     public function guardar(GuardarFuenteCalendarioRequest $solicitud): RedirectResponse
     {
         $this->gestion->fuente($solicitud, $solicitud->validated());
@@ -43,11 +52,14 @@ class FuenteCalendarioController extends Controller
         return redirect()->route('calendario.fuentes')->with('estado', 'Fuente guardada inactiva. Previsualiza su archivo o URL antes de activarla.');
     }
 
+    // Presenta el formulario de FuenteCalendario con el registro resuelto por Laravel para su edición.
     public function editar(FuenteCalendario $fuente): View
     {
         return view('calendario.editar-fuente', compact('fuente'));
     }
 
+    // Envía el registro de FuenteCalendario y los datos validados al servicio para aplicar una
+    // actualización autorizada.
     public function actualizar(ActualizarFuenteCalendarioRequest $solicitud, FuenteCalendario $fuente): RedirectResponse
     {
         $this->gestion->actualizarFuente($solicitud, $fuente, $solicitud->validated());
@@ -55,8 +67,11 @@ class FuenteCalendarioController extends Controller
         return redirect()->route('calendario.fuentes')->with('estado', 'Fuente actualizada y suspendida. Previsualiza para activarla; sus bloqueos se conservan.');
     }
 
+    // Lee un archivo o una URL, analiza sus eventos y guarda una previsualización cifrada en sesión
+    // con confirmación y caducidad de diez minutos.
     public function previsualizar(Request $solicitud, FuenteCalendario $fuente, ServicioLecturaCalendario $lector, ServicioArchivoCalendario $archivos, ServicioSincronizacionCalendario $sincronizacion): View
     {
+        // Valida los datos de esta acción antes de consultar o modificar registros relacionados.
         $solicitud->validate(['archivo' => ['nullable', 'file', 'max:2048']]);
         try {
             if ($solicitud->hasFile('archivo')) {
@@ -83,8 +98,11 @@ class FuenteCalendarioController extends Controller
         return view('calendario.previsualizacion', compact('fuente', 'eventos', 'confirmacion'));
     }
 
+    // Comprueba fuente, versión, token y vencimiento de la previsualización. Relee la URL para aplicar
+    // cambios externos o importa el archivo sin autorizar bajas externas.
     public function importar(Request $solicitud, FuenteCalendario $fuente, ServicioSincronizacionCalendario $sincronizacion): RedirectResponse
     {
+        // Valida los datos de esta acción antes de consultar o modificar registros relacionados.
         $solicitud->validate(['confirmacion' => ['required', 'string', 'size:40']]);
         $previa = $solicitud->session()->get('ical_previsualizacion');
         abort_unless($previa && $previa['fuente_id'] === $fuente->id && $previa['version'] === $fuente->version
@@ -109,6 +127,7 @@ class FuenteCalendarioController extends Controller
         return redirect()->route('calendario.ver')->with('estado', 'Eventos importados. Las bajas solo se comprueban leyendo la fuente original por URL.');
     }
 
+    // Suspende nuevas lecturas automáticas conservando los bloqueos existentes.
     public function suspender(Request $solicitud, FuenteCalendario $fuente): RedirectResponse
     {
         $this->gestion->activar($solicitud, $fuente, false);
@@ -116,6 +135,8 @@ class FuenteCalendarioController extends Controller
         return redirect()->route('calendario.fuentes')->with('estado', 'Fuente suspendida. Sus bloqueos se conservan.');
     }
 
+    // Valida que la fuente esté activa y tenga URL, y envía su identificador a la cola; la descarga no
+    // ocurre dentro de esta respuesta.
     public function sincronizar(Request $solicitud, FuenteCalendario $fuente): RedirectResponse
     {
         abort_unless($fuente->activa && $fuente->url, 422, 'Activa una fuente con URL antes de sincronizar.');

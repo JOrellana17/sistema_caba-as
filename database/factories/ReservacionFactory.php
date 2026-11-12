@@ -1,5 +1,8 @@
 <?php
 
+// Fábrica de datos ficticios para Reservacion. Solo crea registros cuando un llamador solicita
+// persistirlos; no configura cuentas reales.
+
 namespace Database\Factories;
 
 use App\Models\Cabana;
@@ -12,6 +15,8 @@ use Illuminate\Support\Str;
 /** @extends Factory<Reservacion> */
 class ReservacionFactory extends Factory
 {
+    // Define atributos ficticios coherentes y relaciones necesarias para preparar registros de prueba;
+    // no representa datos reales del establecimiento.
     public function definition(): array
     {
         // Importes y moneda ficticios solo para pruebas, sin definir reglas de cobro.

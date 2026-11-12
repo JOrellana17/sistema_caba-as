@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 
+// Configura la compilación de recursos locales y la recarga durante el desarrollo.
 export default defineConfig({
     plugins: [
         laravel({

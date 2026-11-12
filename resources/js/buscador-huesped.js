@@ -1,8 +1,10 @@
+// Cuenta letras y números Unicode; los separadores no permiten saltarse el mínimo de búsqueda.
 export function caracteresUtiles(valor) {
     return (valor.match(/[\p{L}\p{N}]/gu) ?? []).length;
 }
 
 export class BuscadorHuesped {
+    // Vincula un buscador a su formulario y permite inyectar transporte y demora sin compartir estado entre componentes.
     constructor(raiz, { solicitar = (...argumentos) => fetch(...argumentos), demora = 250 } = {}) {
         this.raiz = raiz;
         this.solicitar = solicitar;
@@ -35,6 +37,7 @@ export class BuscadorHuesped {
         });
     }
 
+    // Prepara el alta integrada si está disponible; conserva el contexto del formulario principal.
     iniciarAlta() {
         this.panelAlta = this.raiz.querySelector('[data-alta-huesped]');
         if (!this.panelAlta) return;
@@ -60,12 +63,14 @@ export class BuscadorHuesped {
         });
     }
 
+    // Abre o cierra el panel y habilita sus campos solo cuando corresponde.
     mostrarAlta(abierta) {
         this.panelAlta.hidden = !abierta;
         this.abrirAlta.setAttribute('aria-expanded', String(abierta));
         this.camposAlta.forEach(campo => { campo.disabled = !abierta; });
     }
 
+    // Envía el alta con CSRF, presenta errores y selecciona explícitamente el registro creado.
     async crearHuesped() {
         if (this.creandoHuesped || this.panelAlta.hidden) return;
         for (const campo of this.camposAlta) {
@@ -106,12 +111,14 @@ export class BuscadorHuesped {
             this.cerrarAlta.disabled = false;
         }
     }
+    // Cancela la espera y la petición en curso; incrementa la versión para descartar respuestas antiguas.
     cancelar() {
         clearTimeout(this.temporizador);
         this.controlador?.abort();
         return ++this.version;
     }
 
+    // Vacía las opciones y reinicia el estado de navegación accesible.
     limpiarResultados() {
         this.resultados = [];
         this.indice = -1;
@@ -121,12 +128,14 @@ export class BuscadorHuesped {
         this.elementos.entrada.removeAttribute('aria-activedescendant');
     }
 
+    // Distingue información, errores recuperables y ausencia de coincidencias en el mensaje visible.
     estado(texto, error = false, sinResultados = false) {
         this.elementos.estado.textContent = texto;
         this.elementos.reintentar.hidden = !error;
         if (this.elementos.crear) this.elementos.crear.hidden = !sinResultados;
     }
 
+    // Al cambiar el texto borra la selección anterior y programa una búsqueda con demora.
     editar() {
         this.cancelar();
         const { entrada, identificador, seleccion, cambiar } = this.elementos;
@@ -143,6 +152,7 @@ export class BuscadorHuesped {
         this.temporizador = setTimeout(() => this.consultar(), this.demora);
     }
 
+    // Consulta coincidencias desde el mínimo útil; solo la respuesta vigente puede actualizar la lista.
     async consultar() {
         const version = this.cancelar();
         const termino = this.elementos.entrada.value;
@@ -191,6 +201,7 @@ export class BuscadorHuesped {
         }
     }
 
+    // Compone el texto del huésped con los datos y advertencias entregados por el servidor.
     resumen(huesped) {
         return huesped.nombre + ' · Teléfono: ' + (huesped.telefono || 'Sin registrar') +
             ' · Identidad: ' + (huesped.identidad_visible ? (huesped.numero_identidad || 'Sin registrar') : 'Restringida') +
@@ -198,6 +209,7 @@ export class BuscadorHuesped {
             (huesped.lista_negra ? ' · Advertencia: lista negra' : '');
     }
 
+    // Guarda el ID elegido en el campo oculto, informa al formulario y cancela búsquedas pendientes.
     seleccionar(huesped, version) {
         if (version !== this.version) return;
         this.cancelar();
@@ -212,6 +224,7 @@ export class BuscadorHuesped {
         this.raiz.dispatchEvent(new CustomEvent('huesped-seleccionado', { bubbles: true, detail: { huesped_id: huesped.id } }));
     }
 
+    // Permite recorrer opciones con flechas, confirmar con Enter y cerrar con Escape.
     teclado(evento) {
         if (evento.key === 'Escape') {
             this.cancelar();
@@ -242,6 +255,7 @@ export class BuscadorHuesped {
     }
 }
 
+// Crea una instancia independiente por cada componente marcado en la página.
 export function iniciarBuscadores() {
     document.querySelectorAll('[data-buscador-huesped]').forEach((raiz) => new BuscadorHuesped(raiz));
 }

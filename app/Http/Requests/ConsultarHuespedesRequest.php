@@ -1,5 +1,8 @@
 <?php
 
+// Validación de entrada HTTP. Valida el término y los filtros de condición del listado de clientes sin
+// aceptar campos de escritura.
+
 namespace App\Http\Requests;
 
 use App\Support\NormalizadorHuesped;
@@ -7,6 +10,8 @@ use Closure;
 
 class ConsultarHuespedesRequest extends SolicitudAdministrativa
 {
+    // Valida el término y los filtros de condición del listado de clientes sin aceptar campos de
+    // escritura.
     public function rules(): array
     {
         return [

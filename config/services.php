@@ -1,5 +1,8 @@
 <?php
 
+// Opciones de proveedores externos reconocidos por Laravel; las credenciales proceden del entorno y
+// configurar un proveedor no envía comunicaciones.
+
 return [
 
     /*

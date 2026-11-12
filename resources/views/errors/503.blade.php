@@ -1,3 +1,4 @@
+{{-- errors: Presentación de 503. --}}
 @extends('errors.base')
 @section('codigo', '503')
 @section('mensaje', 'El sistema no está disponible temporalmente.')

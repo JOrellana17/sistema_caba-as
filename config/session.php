@@ -1,5 +1,8 @@
 <?php
 
+// Almacén, duración y atributos de la cookie de sesión. Estos valores gobiernan la autenticación HTTP
+// y el vencimiento previsto del historial.
+
 use Illuminate\Support\Str;
 
 return [

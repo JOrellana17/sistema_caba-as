@@ -1,5 +1,8 @@
+{{-- components: Presentación de buscador huesped. --}}
+{{-- Entradas del componente y valores por defecto; los atributos adicionales proceden de la vista que lo utiliza. --}}
 @props(['requerido' => true, 'seleccion' => null, 'altaEnFormulario' => false])
 @php($identificador = 'buscador-'.\Illuminate\Support\Str::uuid())
+{{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
 @can('huespedes.buscar')
 <div id="{{ $identificador }}" data-buscador-huesped data-url="{{ route('huespedes.buscar') }}" data-requerido="{{ $requerido ? '1' : '0' }}" class="mb-4">
     <label for="{{ $identificador }}-entrada" class="form-label">Buscar cliente por nombre, teléfono o número de identidad</label>
@@ -20,6 +23,7 @@
     <div class="d-flex flex-wrap gap-2">
         <button type="button" data-cambiar class="btn btn-outline-secondary btn-sm" @if (! $seleccion) hidden @endif>Cambiar cliente</button>
         <button type="button" data-reintentar class="btn btn-outline-primary btn-sm" hidden>Reintentar consulta</button>
+        {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
         @can('huespedes.crear')
             @if ($altaEnFormulario)
                 <button type="button" data-abrir-alta class="btn btn-outline-primary btn-sm" aria-expanded="false" aria-controls="{{ $identificador }}-alta">Nuevo huésped</button>
@@ -29,6 +33,7 @@
         @endcan
     </div>
     @if ($altaEnFormulario)
+        {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
         @can('huespedes.crear')
             <section id="{{ $identificador }}-alta" data-alta-huesped data-url="{{ route('huespedes.guardar_desde_formulario') }}" class="border rounded p-3 mt-3" aria-label="Alta de huésped" hidden>
                 <h2 class="h5">Nuevo huésped</h2>
@@ -55,6 +60,7 @@
             </section>
         @endcan
     @endif
+    {{-- Presenta el mensaje de validación asociado a este campo. --}}
     @error('huesped_id')<p class="text-danger" role="alert">{{ $message }}</p>@enderror
     <noscript><p>Activa JavaScript para buscar y seleccionar un cliente.</p></noscript>
 </div>

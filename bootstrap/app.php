@@ -1,5 +1,8 @@
 <?php
 
+// Arranque de Laravel: carga rutas, configura redirecciones y middleware y excluye secretos de los
+// datos recuperados tras errores.
+
 use App\Http\Middleware\VerificarUsuarioActivo;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;

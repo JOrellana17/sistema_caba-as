@@ -1,5 +1,8 @@
 <?php
 
+// Canales y niveles de registro de errores. Mantener credenciales y URLs privadas fuera de los
+// mensajes registrados.
+
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;

@@ -1,5 +1,8 @@
 <?php
 
+// Validación de entrada HTTP. Valida mes, cabaña, origen y estado para construir la vista mensual del
+// calendario.
+
 namespace App\Http\Requests;
 
 use App\Models\Reservacion;
@@ -7,6 +10,7 @@ use Illuminate\Validation\Rule;
 
 class ConsultarCalendarioRequest extends SolicitudAdministrativa
 {
+    // Valida mes, cabaña, origen y estado para construir la vista mensual del calendario.
     public function rules(): array
     {
         return [

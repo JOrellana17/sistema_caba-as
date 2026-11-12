@@ -1,13 +1,19 @@
 <?php
 
+// Validación de entrada HTTP. Restringe el tipo de credencial al contexto autorizado y exige nombre
+// únicamente para sugerir un usuario.
+
 namespace App\Http\Requests;
 
 use Illuminate\Validation\Rule;
 
 class GenerarCredencialesRequest extends SolicitudAdministrativa
 {
+    // Autoriza el contexto de generación con el permiso correspondiente, releyendo la cuenta para no
+    // usar privilegios obsoletos.
     public function authorize(): bool
     {
+        // Consulta los privilegios actuales del actor antes de ejecutar una modificación.
         $actor = $this->user()?->fresh();
         if (! $actor?->activo) {
             return false;
@@ -22,6 +28,8 @@ class GenerarCredencialesRequest extends SolicitudAdministrativa
         };
     }
 
+    // Restringe el tipo de credencial al contexto autorizado y exige nombre únicamente para sugerir un
+    // usuario.
     public function rules(): array
     {
         return [

@@ -1,4 +1,7 @@
+{{-- components: Presentación de fila reservacion. --}}
+{{-- Entradas del componente y valores por defecto; los atributos adicionales proceden de la vista que lo utiliza. --}}
 @props(['reservacion'])
+{{-- Prepara valores de presentación antes de renderizar este bloque. --}}
 @php
     $entrada = $reservacion->entrada_prevista->setTimezone(\App\Services\ServicioDisponibilidad::ZONA_HORARIA)->locale('es');
     $salida = $reservacion->salida_prevista->setTimezone(\App\Services\ServicioDisponibilidad::ZONA_HORARIA)->locale('es');

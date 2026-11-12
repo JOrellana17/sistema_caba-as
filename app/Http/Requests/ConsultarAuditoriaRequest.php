@@ -1,9 +1,13 @@
 <?php
 
+// Validación de entrada HTTP. Valida filtros de módulo, acción, actor y período antes de construir la
+// consulta de auditoría.
+
 namespace App\Http\Requests;
 
 class ConsultarAuditoriaRequest extends SolicitudAdministrativa
 {
+    // Valida filtros de módulo, acción, actor y período antes de construir la consulta de auditoría.
     public function rules(): array
     {
         return [
@@ -15,6 +19,8 @@ class ConsultarAuditoriaRequest extends SolicitudAdministrativa
         ];
     }
 
+    // Define mensajes legibles en español para los errores de validación; las claves corresponden a
+    // campos o reglas de Laravel.
     public function messages(): array
     {
         return array_merge(parent::messages(), [

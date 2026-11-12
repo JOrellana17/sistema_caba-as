@@ -1,5 +1,8 @@
 <?php
 
+// Guard de sesión y proveedor Eloquent de usuarios; también declara el broker del framework. Declarar
+// ese broker no crea una pantalla de recuperación por correo.
+
 use App\Models\Usuario;
 
 return [

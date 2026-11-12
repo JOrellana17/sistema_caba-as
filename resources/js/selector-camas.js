@@ -1,3 +1,4 @@
+// Sincroniza cantidad, tipos de cama y resumen en cada selector del formulario.
 export function iniciarSelectoresCamas() {
     document.querySelectorAll('[data-selector-camas]').forEach((selector) => {
         const numero = selector.querySelector('[data-numero-camas]');
@@ -7,9 +8,11 @@ export function iniciarSelectoresCamas() {
         const estado = selector.querySelector('[data-estado-camas]');
         const selecciones = new Map();
 
+        // Conserva los tipos por posición para recuperarlos al reducir y ampliar la cantidad.
         const recordarSelecciones = () => {
             lista.querySelectorAll('[data-tipo-cama]').forEach((campo, indice) => selecciones.set(indice, campo.value));
         };
+        // Cuenta las camas configuradas y distingue un dato sin registrar de una cantidad explícita.
         const actualizarResumen = () => {
             let configuradas = 0;
             lista.querySelectorAll('[data-cama]').forEach((cama, indice) => {
@@ -19,6 +22,7 @@ export function iniciarSelectoresCamas() {
             });
             estado.textContent = numero.value === '' ? 'Sin registrar' : `${configuradas} de ${lista.children.length} camas con tipo seleccionado.`;
         };
+        // Valida la cantidad, ajusta las filas desde la plantilla y restaura las selecciones existentes.
         const ajustarCantidad = () => {
             recordarSelecciones();
             if (numero.value !== '' && (!numero.validity.valid || !Number.isInteger(Number(numero.value)))) {
@@ -51,6 +55,7 @@ export function iniciarSelectoresCamas() {
             recordarSelecciones();
             actualizarResumen();
         });
+        // Abre la sección que contiene el campo inválido para que la validación del navegador sea visible.
         lista.addEventListener('invalid', () => {
             lista.querySelector('[data-tipo-cama]:invalid')?.closest('[data-cama]').setAttribute('open', '');
         }, true);

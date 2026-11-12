@@ -1,5 +1,8 @@
 <?php
 
+// Fábrica de datos ficticios para Usuario. Solo crea registros cuando un llamador solicita
+// persistirlos; no configura cuentas reales.
+
 namespace Database\Factories;
 
 use App\Models\Usuario;
@@ -11,6 +14,8 @@ use Illuminate\Support\Str;
  */
 class UsuarioFactory extends Factory
 {
+    // Define atributos ficticios coherentes y relaciones necesarias para preparar registros de prueba;
+    // no representa datos reales del establecimiento.
     /**
      * Define una cuenta ficticia para las pruebas.
      *
@@ -29,6 +34,8 @@ class UsuarioFactory extends Factory
         ];
     }
 
+    // Prepara una variante de la fábrica con la cuenta desactivada para comprobar restricciones de
+    // acceso.
     /**
      * Representa una cuenta que no puede acceder al sistema.
      */
@@ -39,6 +46,8 @@ class UsuarioFactory extends Factory
         ]);
     }
 
+    // Prepara una cuenta con el máximo de intentos y fecha de bloqueo para verificar el flujo
+    // administrativo de desbloqueo.
     /**
      * Representa una cuenta bloqueada por intentos fallidos de acceso.
      */

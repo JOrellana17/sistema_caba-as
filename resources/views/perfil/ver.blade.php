@@ -1,5 +1,7 @@
+{{-- perfil: Detalle del registro y operaciones disponibles para el usuario actual. --}}
 @extends('layouts.administracion')
 @section('titulo', 'Mi perfil')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <h1 class="h2 mb-4">Mi perfil</h1>
 <section class="card border-0 shadow-sm mb-4"><div class="card-body">
@@ -13,6 +15,7 @@
 <div class="row g-4">
 <section class="col-lg-6"><div class="card h-100"><div class="card-body">
 <h2 class="h5">Cambiar contraseña</h2>
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form method="POST" action="{{ route('perfil.credenciales') }}">@csrf @method('PUT')
 <input type="hidden" name="operacion" value="contrasena">
 <label for="actual-contrasena" class="form-label">Contraseña actual</label><input id="actual-contrasena" class="form-control mb-3" type="password" name="contrasena_actual" autocomplete="current-password" required>
@@ -25,6 +28,7 @@
 <section class="col-lg-6"><div class="card h-100"><div class="card-body">
 <h2 class="h5">{{ $usuario->pin ? 'Cambiar PIN' : 'Configurar PIN opcional' }}</h2>
 <p class="text-body-secondary">El PIN permite iniciar sesión en lugar de la contraseña.</p>
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form method="POST" action="{{ route('perfil.credenciales') }}">@csrf @method('PUT')<input type="hidden" name="operacion" value="pin">
 <label for="actual-pin" class="form-label">Contraseña actual</label><input id="actual-pin" class="form-control mb-3" type="password" name="contrasena_actual" autocomplete="current-password" required>
 <x-campo nombre="pin" etiqueta="PIN de seis dígitos" tipo="password" inputmode="numeric" maxlength="6" autocomplete="off" required />
@@ -32,6 +36,7 @@
 <x-generar-credencial tipo="pin" contexto="perfil" />
 <button class="btn btn-primary" type="submit">Guardar PIN</button></form>
 @if ($usuario->pin)
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form class="mt-4" method="POST" action="{{ route('perfil.credenciales') }}">@csrf @method('PUT')<input type="hidden" name="operacion" value="retirar_pin">
 <label for="actual-retirar" class="form-label">Contraseña actual para retirar el PIN</label><input id="actual-retirar" class="form-control mb-3" name="contrasena_actual" type="password" autocomplete="current-password" required>
 <button class="btn btn-outline-danger" type="submit">Retirar PIN</button></form>

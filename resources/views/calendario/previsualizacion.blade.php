@@ -1,5 +1,7 @@
+{{-- calendario: Presentación de previsualizacion. --}}
 @extends('layouts.administracion')
 @section('titulo', 'Previsualización iCalendar')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <h1 class="h3">Previsualización · {{ $fuente->nombre }}</h1>
 <p>Destino: {{ $fuente->cabana->nombre }}. {{ count($eventos) }} eventos. No se han cambiado los bloqueos.</p>
@@ -8,5 +10,6 @@
 @foreach (array_slice($eventos, 0, 50) as $evento)<tr><td>{{ isset($evento['inicio']) ? $evento['inicio']->setTimezone(\App\Services\ServicioDisponibilidad::ZONA_HORARIA)->format('d/m/Y H:i') : 'Sin fechas' }}</td><td>{{ isset($evento['fin']) ? $evento['fin']->setTimezone(\App\Services\ServicioDisponibilidad::ZONA_HORARIA)->format('d/m/Y H:i') : 'Sin fechas' }}</td><td>{{ $evento['accion'] }} @if ($evento['conflicto'])<span class="badge text-bg-danger">Conflicto: revisar</span>@endif</td></tr>@endforeach
 </tbody></table></div>
 @if (count($eventos) > 50)<p>Vista limitada a los primeros 50 eventos. Se procesarán los {{ count($eventos) }} al confirmar.</p>@endif
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form method="POST" action="{{ route('calendario.importar', $fuente) }}">@csrf<input type="hidden" name="confirmacion" value="{{ $confirmacion }}"><button class="btn btn-primary" type="submit">{{ $fuente->activa ? 'Confirmar importación' : 'Activar fuente e importar' }}</button> <a class="btn btn-outline-secondary" href="{{ route('calendario.fuentes') }}">Volver sin importar</a></form>
 @endsection

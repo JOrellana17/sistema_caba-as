@@ -1,5 +1,8 @@
 <?php
 
+// Comando Artisan: Solicita y valida credenciales ocultas, prepara permisos y crea una cuenta con rol
+// administrador y auditoría sin reemplazar cuentas existentes.
+
 namespace App\Console\Commands;
 
 use App\Models\RegistroAuditoria;
@@ -16,6 +19,8 @@ class CrearAdministrador extends Command
 
     protected $description = 'Crea una cuenta administradora mediante contraseña oculta';
 
+    // Solicita y valida credenciales ocultas, prepara permisos y crea una cuenta con rol administrador
+    // y auditoría sin reemplazar cuentas existentes.
     public function handle(): int
     {
         $minimo = filter_var($this->option('longitud-minima'), FILTER_VALIDATE_INT);
@@ -53,6 +58,7 @@ class CrearAdministrador extends Command
             return self::FAILURE;
         }
 
+        // Las escrituras de este bloque se confirman juntas; una excepción revierte sus cambios en la base de datos.
         DB::transaction(function () use ($datos) {
             (new PermisosSeeder)->run();
             $usuario = Usuario::create([

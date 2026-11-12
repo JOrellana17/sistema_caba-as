@@ -1,3 +1,4 @@
+{{-- errors: Presentación de 429. --}}
 @extends('errors.base')
 @section('codigo', '429')
 @section('mensaje', 'Hay demasiadas solicitudes.')

@@ -1,7 +1,10 @@
+{{-- auditoria: Listado con filtros, acciones autorizadas y navegación entre resultados. --}}
 @extends('layouts.administracion')
 @section('titulo', 'Auditoría')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <h1 class="h2 mb-4">Auditoría</h1>
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form method="GET" action="{{ route('auditoria.listar') }}" class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <div class="row">
@@ -15,6 +18,7 @@
     </div>
 </form>
 <div class="card border-0 shadow-sm"><div class="table-responsive">
+{{-- Organiza los datos en columnas para comparar registros y localizar sus acciones. --}}
 <table class="table align-middle mb-0">
     <caption class="px-3">Historial de operaciones</caption>
     <thead><tr><th scope="col">Fecha ({{ config('app.timezone') }})</th><th scope="col">Usuario</th><th scope="col">Módulo</th><th scope="col">Acción</th><th scope="col">Detalle</th></tr></thead>

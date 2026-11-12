@@ -1,9 +1,14 @@
 <?php
 
+// Validación de entrada HTTP. Permite motivo y horas en una transición; prohíbe enviar directamente
+// estado, cliente, cabaña o importes para evadir el flujo.
+
 namespace App\Http\Requests;
 
 class CambiarReservacionRequest extends SolicitudAdministrativa
 {
+    // Permite motivo y horas en una transición; prohíbe enviar directamente estado, cliente, cabaña o
+    // importes para evadir el flujo.
     public function rules(): array
     {
         return [

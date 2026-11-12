@@ -1,5 +1,8 @@
 <?php
 
+// Comando Artisan: Recorre por lotes las fuentes activas cuya consulta corresponde y encola trabajos
+// individuales de sincronización.
+
 namespace App\Console\Commands;
 
 use App\Jobs\SincronizarFuenteCalendario;
@@ -12,6 +15,8 @@ class SincronizarCalendarios extends Command
 
     protected $description = 'Encola las fuentes iCalendar activas cuya consulta está pendiente';
 
+    // Recorre por lotes las fuentes activas cuya consulta corresponde y encola trabajos individuales
+    // de sincronización.
     public function handle(): int
     {
         FuenteCalendario::where('activa', true)->whereNotNull('url')

@@ -1,5 +1,8 @@
 <?php
 
+// Permisos iniciales de los roles operativos. La semilla utiliza esta matriz y las autorizaciones se
+// comprueban además en el servidor.
+
 return [
     // Permisos iniciales aprobados; las ediciones posteriores se administran desde Roles.
     'empleado' => [

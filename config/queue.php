@@ -1,5 +1,8 @@
 <?php
 
+// Conexiones de cola y almacenamiento de trabajos fallidos. Los trabajos iCalendar se procesan
+// mediante el worker configurado.
+
 return [
 
     /*

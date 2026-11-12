@@ -1,11 +1,15 @@
 <?php
 
+// Validación de entrada HTTP. Valida nombre, código único y descripción del rol; el servicio protege
+// los códigos reservados.
+
 namespace App\Http\Requests;
 
 use Illuminate\Validation\Rule;
 
 class GuardarRolRequest extends SolicitudAdministrativa
 {
+    // Valida nombre, código único y descripción del rol; el servicio protege los códigos reservados.
     public function rules(): array
     {
         return [

@@ -1,5 +1,8 @@
 <?php
 
+// Servicio de disponibilidad. Centraliza las operaciones descritas en sus métodos para que los
+// controladores reutilicen las mismas reglas.
+
 namespace App\Services;
 
 use App\Models\Cabana;
@@ -14,6 +17,8 @@ class ServicioDisponibilidad
 {
     public const ZONA_HORARIA = 'America/Tegucigalpa';
 
+    // Valida fechas y horas locales y convierte los extremos a UTC para comparar períodos con una
+    // misma referencia temporal.
     /** @return array{entrada: CarbonImmutable, salida: CarbonImmutable} */
     public function periodo(string $fechaEntrada, string $fechaSalida, string $horaEntrada = '14:00', string $horaSalida = '11:00'): array
     {
@@ -29,6 +34,8 @@ class ServicioDisponibilidad
         ];
     }
 
+    // Construye la consulta de cabañas activas con capacidad suficiente, sin reservaciones ni eventos
+    // bloqueantes superpuestos. Las exclusiones son internas de un caso de uso autorizado.
     /** Las exclusiones solo proceden de un caso de uso autorizado, nunca de una consulta pública. */
     public function disponibles(string $fechaEntrada, string $fechaSalida, int $cantidadHuespedes, ?Reservacion $excluida = null, string $horaEntrada = '14:00', string $horaSalida = '11:00', ?EventoCalendario $eventoExcluido = null): Builder
     {
@@ -56,6 +63,8 @@ class ServicioDisponibilidad
             });
     }
 
+    // Comprueba una cabaña concreta usando la misma consulta de disponibilidad. Para una entrada real
+    // también exige ausencia de aseo pendiente y de otra estancia hospedada.
     /** Debe repetirse bajo bloqueo de cabaña durante una escritura. */
     public function verificar(Cabana $cabana, string $fechaEntrada, string $fechaSalida, int $cantidadHuespedes, ?Reservacion $excluida = null, string $horaEntrada = '14:00', string $horaSalida = '11:00', bool $entradaReal = false, ?EventoCalendario $eventoExcluido = null): bool
     {
@@ -73,6 +82,8 @@ class ServicioDisponibilidad
         return $consulta->exists();
     }
 
+    // Explica el impedimento de entrada si hay un aseo pendiente o una estancia todavía hospedada,
+    // aunque su horario previsto ya haya terminado.
     public function exigirEntradaHabilitada(Cabana $cabana, ?Reservacion $excluida = null): void
     {
         if ($cabana->aseosPendientes()->exists()) {

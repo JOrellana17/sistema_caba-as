@@ -1,5 +1,7 @@
 <?php
 
+// Middleware que impide continuar usando la aplicación con una cuenta desactivada.
+
 namespace App\Http\Middleware;
 
 use App\Services\ServicioAuditoria;
@@ -11,8 +13,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class VerificarUsuarioActivo
 {
+    // Recibe ServicioAuditoria, ServicioSesiones mediante el contenedor de Laravel para reutilizarlas
+    // durante la operación.
     public function __construct(private ServicioAuditoria $auditoria, private ServicioSesiones $sesiones) {}
 
+    // Revoca una sesión cuando su cuenta quedó inactiva y devuelve JSON 401 o redirección al acceso
+    // según el tipo de petición.
     public function handle(Request $solicitud, Closure $siguiente): Response
     {
         if ($solicitud->user() && ! $solicitud->user()->activo) {

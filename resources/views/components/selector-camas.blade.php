@@ -1,4 +1,7 @@
+{{-- components: Presentación de selector camas. --}}
+{{-- Entradas del componente y valores por defecto; los atributos adicionales proceden de la vista que lo utiliza. --}}
 @props(['cabana'])
+{{-- Prepara valores de presentación antes de renderizar este bloque. --}}
 @php
     $tipos = old('tipos_camas', $cabana->tiposCamas() ?? []);
     $tipos = is_array($tipos) && array_is_list($tipos) ? array_slice($tipos, 0, \App\Models\Cabana::MAXIMO_CAMAS_FORMULARIO) : [];
@@ -13,8 +16,10 @@
             min="0" max="{{ \App\Models\Cabana::MAXIMO_CAMAS_FORMULARIO }}" step="1" value="{{ is_scalar($cantidad) ? $cantidad : '' }}" data-numero-camas
             aria-describedby="ayuda-camas @error('cantidad_camas') error-cantidad-camas @enderror" @error('cantidad_camas') aria-invalid="true" @enderror>
         <p class="form-text mb-0" id="ayuda-camas">Indica cuántas camas tiene la cabaña y selecciona el tipo de cada una. Deja el número vacío para «Sin registrar» o utiliza cero si no tiene camas. Al guardar una cantidad menor, se conservarán solo las camas indicadas.</p>
+        {{-- Presenta el mensaje de validación asociado a este campo. --}}
         @error('cantidad_camas')<div class="invalid-feedback" id="error-cantidad-camas">{{ $message }}</div>@enderror
     </div>
+    {{-- Presenta el mensaje de validación asociado a este campo. --}}
     @error('tipos_camas')<p class="text-danger">{{ $message }}</p>@enderror
     <p class="mb-2">Total de camas: <output data-total-camas>{{ $cantidadValida === false ? 'Sin registrar' : $cantidadValida }}</output></p>
     <p class="small text-body-secondary" data-estado-camas aria-live="polite">Selecciona el tipo de cada cama.</p>

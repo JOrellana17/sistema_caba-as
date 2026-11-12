@@ -1,5 +1,7 @@
+{{-- layouts: Presentación de administracion. --}}
 @extends('layouts.base')
 @section('pagina')
+{{-- Prepara valores de presentación antes de renderizar este bloque. --}}
 @php
     $usuario = auth()->user();
     $usaDisponibilidadReservaciones = $usuario->can('reservaciones.ver_disponibilidad');
@@ -61,6 +63,7 @@
                         <div class="menu-grupo">
                             <p class="menu-titulo">{{ $titulo }}</p>
                             @foreach ($enlaces as $modulo => [$etiqueta, $ruta, $permiso])
+                                {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
                                 @can($permiso)
                                     <a class="menu-enlace" href="{{ route($ruta) }}"
                                         @if ($moduloActual === $modulo) aria-current="{{ request()->routeIs($ruta) ? 'page' : 'true' }}" @endif>{{ $etiqueta }}</a>
@@ -74,10 +77,13 @@
                 <p class="mb-1 fw-semibold">{{ $usuario->nombre }}</p>
                 <a class="menu-enlace" href="{{ route('perfil.ver') }}">Mi perfil</a>
                 <a class="menu-enlace" href="{{ route('sesiones.propias') }}">Mis sesiones</a>
+                {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
                 @can('sesiones.ver_todas')
                     <a class="menu-enlace" href="{{ route('sesiones.todas') }}">Historial de sesiones</a>
                 @endcan
+                {{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
                 <form method="POST" action="{{ route('sesion.cerrar') }}">
+                    {{-- Incluye el token de sesión que protege la petición contra envíos desde otros sitios. --}}
                     @csrf
                     <button type="submit" class="menu-salir">Cerrar sesión</button>
                 </form>

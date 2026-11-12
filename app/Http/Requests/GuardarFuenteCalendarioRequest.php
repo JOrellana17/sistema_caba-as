@@ -1,11 +1,16 @@
 <?php
 
+// Validación de entrada HTTP. Valida proveedor, cabaña, interpretación, zona horaria y cobertura antes
+// de crear una fuente de calendario.
+
 namespace App\Http\Requests;
 
 use Illuminate\Validation\Rule;
 
 class GuardarFuenteCalendarioRequest extends SolicitudAdministrativa
 {
+    // Valida proveedor, cabaña, interpretación, zona horaria y cobertura antes de crear una fuente de
+    // calendario.
     public function rules(): array
     {
         return [

@@ -1,5 +1,8 @@
 <?php
 
+// Controlador HTTP de EnlaceCalendario. Coordina solicitudes, servicios y respuestas; las rutas
+// declaran los permisos de cada operación.
+
 namespace App\Http\Controllers;
 
 use App\Models\EnlaceCalendario;
@@ -14,8 +17,11 @@ use Illuminate\Validation\Rule;
 
 class EnlaceCalendarioController extends Controller
 {
+    // Valida destino, cabaña y rango; crea el enlace de exportación y lo muestra una sola vez mediante
+    // la sesión.
     public function guardar(Request $solicitud, ServicioGestionCalendario $gestion): RedirectResponse
     {
+        // Valida los datos de esta acción antes de consultar o modificar registros relacionados.
         $datos = $solicitud->validate([
             'cabana_id' => ['nullable', 'integer', 'exists:cabanas,id'],
             'destino' => ['required', Rule::in(['airbnb', 'booking', 'general'])],
@@ -27,6 +33,7 @@ class EnlaceCalendarioController extends Controller
         return redirect()->route('calendario.fuentes')->with('enlace_ical', $gestion->enlace($solicitud, $datos))->with('estado', 'Copia el enlace ahora. Se muestra una sola vez.');
     }
 
+    // Solicita la desactivación del enlace y devuelve confirmación a la pantalla de fuentes.
     public function revocar(Request $solicitud, EnlaceCalendario $enlace, ServicioGestionCalendario $gestion): RedirectResponse
     {
         $gestion->revocar($solicitud, $enlace);
@@ -34,6 +41,8 @@ class EnlaceCalendarioController extends Controller
         return back()->with('estado', 'Enlace revocado; genera otro para rotar el acceso.');
     }
 
+    // Busca el hash del token entre enlaces activos y entrega su ICS; esta ruta pública se autoriza
+    // mediante el token.
     public function feed(string $token, ServicioExportacionCalendario $exportacion): Response
     {
         $enlace = EnlaceCalendario::where('token_hash', hash('sha256', $token))->where('activo', true)->firstOrFail();
@@ -41,8 +50,10 @@ class EnlaceCalendarioController extends Controller
         return $this->respuesta($exportacion->feed($enlace));
     }
 
+    // Valida el rango y los identificadores seleccionados y genera una descarga ICS autorizada.
     public function descargar(Request $solicitud, ServicioExportacionCalendario $exportacion): Response
     {
+        // Valida los datos de esta acción antes de consultar o modificar registros relacionados.
         $datos = $solicitud->validate([
             'cabana_id' => ['nullable', 'integer', 'exists:cabanas,id'],
             'reservacion_id' => ['nullable', 'integer', 'exists:reservaciones,id'],
@@ -54,6 +65,8 @@ class EnlaceCalendarioController extends Controller
         return $this->respuesta($exportacion->generar(isset($datos['cabana_id']) ? (int) $datos['cabana_id'] : null, CarbonImmutable::parse($datos['desde']), CarbonImmutable::parse($datos['hasta']), $individual));
     }
 
+    // Entrega el calendario como archivo ICS, sin caché ni envío del referente, y prohíbe inferir otro
+    // tipo de contenido.
     private function respuesta(string $contenido): Response
     {
         return response($contenido, 200, ['Content-Type' => 'text/calendar; charset=utf-8',

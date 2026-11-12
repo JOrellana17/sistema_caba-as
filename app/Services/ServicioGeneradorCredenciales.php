@@ -1,5 +1,8 @@
 <?php
 
+// Servicio de generador credenciales. Centraliza las operaciones descritas en sus métodos para que los
+// controladores reutilicen las mismas reglas.
+
 namespace App\Services;
 
 use App\Models\Usuario;
@@ -7,6 +10,8 @@ use Illuminate\Support\Str;
 
 class ServicioGeneradorCredenciales
 {
+    // Devuelve un PIN aleatorio, una contraseña aleatoria o un usuario sugerido desde el nombre.
+    // Comprueba usuarios eliminados al evitar duplicados; no crea ni modifica cuentas.
     public function generar(array $datos): string
     {
         if ($datos['tipo'] === 'pin') {

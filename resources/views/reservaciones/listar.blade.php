@@ -1,11 +1,15 @@
+{{-- reservaciones: Listado con filtros, acciones autorizadas y navegación entre resultados. --}}
 @extends('layouts.administracion')
 @section('titulo', 'Reservaciones')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <div class="d-flex flex-wrap justify-content-between gap-3 mb-4">
     <h1 class="h3">Reservaciones</h1>
+    {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
     @can('reservaciones.crear')@can('huespedes.buscar')<a class="btn btn-primary" href="{{ route('reservaciones.crear') }}">Nueva reservación</a>@endcan
     @endcan
 </div>
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form method="GET" action="{{ route('reservaciones.listar') }}" class="card card-body mb-4">
     <div class="row g-3 align-items-end">
         <div class="col-md-4">
@@ -23,10 +27,12 @@
     </div>
 </form>
 <div class="card table-responsive">
+{{-- Organiza los datos en columnas para comparar registros y localizar sus acciones. --}}
 <table class="table align-middle mb-0">
     <caption class="px-3">Pendiente no bloquea la cabaña.</caption>
     <thead><tr><th scope="col">Cabaña</th><th scope="col">Entrada / salida</th><th scope="col">Huéspedes</th><th scope="col">Estado</th><th scope="col">Alojamiento</th><th scope="col">Acciones</th></tr></thead>
     <tbody>
+    {{-- Renderiza los registros y ofrece un estado vacío cuando no existen coincidencias. --}}
     @forelse ($reservaciones as $reservacion)
         <tr>
             <td>{{ $reservacion->cabana->nombre }}</td>

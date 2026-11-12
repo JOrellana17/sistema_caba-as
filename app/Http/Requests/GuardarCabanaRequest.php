@@ -1,5 +1,8 @@
 <?php
 
+// Validación de entrada HTTP. Valida capacidades, tarifas, equipamiento, camas e imagen. Distingue
+// alta de edición y rechaza campos controlados exclusivamente por el servidor.
+
 namespace App\Http\Requests;
 
 use App\Models\Cabana;
@@ -8,6 +11,8 @@ use Illuminate\Validation\Validator;
 
 class GuardarCabanaRequest extends SolicitudAdministrativa
 {
+    // Convierte el arreglo heredado de camas a null cuando todos sus tipos están vacíos;
+    // conserva los ceros explícitos y deja que las reglas rechacen estructuras incompletas.
     protected function prepareForValidation(): void
     {
         $camas = $this->input('camas');
@@ -18,6 +23,8 @@ class GuardarCabanaRequest extends SolicitudAdministrativa
         }
     }
 
+    // Valida capacidades, tarifas, equipamiento, camas e imagen. Distingue alta de edición y rechaza
+    // campos controlados exclusivamente por el servidor.
     public function rules(): array
     {
         $editando = $this->route('cabana') !== null;
@@ -41,6 +48,7 @@ class GuardarCabanaRequest extends SolicitudAdministrativa
             'precio_base_usd' => ['nullable', 'required_with:precio_persona_adicional_usd', 'regex:/^\d{1,10}(\.\d{1,2})?$/'],
             'precio_persona_adicional_usd' => ['nullable', 'required_with:precio_base_usd', 'regex:/^\d{1,10}(\.\d{1,2})?$/'],
             'notas' => ['nullable', 'string', 'max:5000'],
+            // Comprueba contenido y extensión, limita el tamaño y las dimensiones; una extensión por sí sola no prueba que sea una imagen.
             'imagen' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'extensions:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=3000,max_height=3000'],
             'estado' => $editando ? ['prohibited'] : ['required', Rule::in(array_keys(Cabana::ESTADOS))],
             'activa' => $editando ? ['prohibited'] : ['required', 'boolean'],
@@ -51,6 +59,8 @@ class GuardarCabanaRequest extends SolicitudAdministrativa
         ];
     }
 
+    // Define mensajes legibles en español para los errores de validación; las claves corresponden a
+    // campos o reglas de Laravel.
     public function messages(): array
     {
         return array_merge(parent::messages(), [
@@ -82,6 +92,8 @@ class GuardarCabanaRequest extends SolicitudAdministrativa
         ]);
     }
 
+    // Asocia nombres técnicos de campos con etiquetas en español para que los mensajes del validador
+    // sean comprensibles.
     public function attributes(): array
     {
         return [
@@ -100,6 +112,8 @@ class GuardarCabanaRequest extends SolicitudAdministrativa
         ];
     }
 
+    // Comprueba la coherencia entre número de camas y tipos seleccionados después de las reglas
+    // básicas; exige un tipo por cama.
     public function after(): array
     {
         return [function (Validator $validador) {

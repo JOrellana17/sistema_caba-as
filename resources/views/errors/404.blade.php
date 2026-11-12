@@ -1,3 +1,4 @@
+{{-- errors: Presentación de 404. --}}
 @extends('errors.base')
 @section('codigo', '404')
 @section('mensaje', 'No encontramos esta página.')

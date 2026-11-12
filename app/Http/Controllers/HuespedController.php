@@ -1,5 +1,8 @@
 <?php
 
+// Controlador HTTP de Huesped. Coordina solicitudes, servicios y respuestas; las rutas declaran los
+// permisos de cada operación.
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\BuscarHuespedesRequest;
@@ -18,10 +21,15 @@ use Illuminate\View\View;
 
 class HuespedController extends Controller
 {
+    // Recibe ServicioHuespedes, ServicioBusquedaHuespedes mediante el contenedor de Laravel para
+    // reutilizarlas durante la operación.
     public function __construct(private ServicioHuespedes $huespedes, private ServicioBusquedaHuespedes $busqueda) {}
 
+    // Consulta y pagina los registros de Huesped para su listado; conserva el orden y los filtros
+    // definidos en esta acción.
     public function listar(ConsultarHuespedesRequest $solicitud): View
     {
+        // Usa solo los filtros aprobados por el Form Request, no todos los parámetros recibidos.
         $filtros = $solicitud->validated();
         $eliminados = $solicitud->boolean('eliminados');
         if ($eliminados) {
@@ -51,11 +59,14 @@ class HuespedController extends Controller
         ]);
     }
 
+    // Presenta la pantalla de búsqueda compartida sin crear ni seleccionar automáticamente un huésped.
     public function buscador(): View
     {
         return view('huespedes.buscador');
     }
 
+    // Entrega coincidencias en JSON mediante el servicio compartido, limitando los datos de identidad
+    // según los permisos.
     public function buscar(BuscarHuespedesRequest $solicitud): JsonResponse
     {
         // El negocio autoriza identidad completa a quienes pueden buscar.
@@ -63,11 +74,15 @@ class HuespedController extends Controller
             ->header('Cache-Control', 'private, no-store');
     }
 
+    // Prepara el formulario de alta de Huesped con un modelo nuevo; mostrar el formulario todavía no
+    // guarda un registro.
     public function crear(): View
     {
         return view('huespedes.formulario', ['huesped' => new Huesped]);
     }
 
+    // Entrega los datos validados de Huesped al servicio responsable de guardarlos y devuelve la
+    // respuesta de confirmación.
     public function guardar(GuardarHuespedRequest $solicitud): RedirectResponse
     {
         $huesped = $this->huespedes->guardar($solicitud, $solicitud->validated());
@@ -75,6 +90,8 @@ class HuespedController extends Controller
         return $this->volver($solicitud, $huesped);
     }
 
+    // Crea un huésped desde el formulario integrado y devuelve su resumen en JSON para reutilizar el
+    // mismo identificador sin perder los demás campos.
     public function guardarDesdeFormulario(GuardarHuespedRequest $solicitud): JsonResponse
     {
         $huesped = $this->huespedes->guardar($solicitud, $solicitud->validated());
@@ -83,6 +100,7 @@ class HuespedController extends Controller
             ->header('Cache-Control', 'private, no-store');
     }
 
+    // Carga el detalle de Huesped y sus relaciones necesarias para presentar la ficha.
     public function ver(Request $solicitud, Huesped $huesped): View
     {
         $historial = $solicitud->user()->can('auditoria.ver')
@@ -98,11 +116,14 @@ class HuespedController extends Controller
         return view('huespedes.ver', compact('huesped', 'historial', 'estancias'));
     }
 
+    // Presenta el formulario de Huesped con el registro resuelto por Laravel para su edición.
     public function editar(Huesped $huesped): View
     {
         return view('huespedes.formulario', compact('huesped'));
     }
 
+    // Envía el registro de Huesped y los datos validados al servicio para aplicar una actualización
+    // autorizada.
     public function actualizar(GuardarHuespedRequest $solicitud, Huesped $huesped): RedirectResponse
     {
         $this->huespedes->guardar($solicitud, $solicitud->validated(), $huesped);
@@ -110,6 +131,7 @@ class HuespedController extends Controller
         return $this->volver($solicitud, $huesped);
     }
 
+    // Envía el cambio de condición de Huesped al servicio mediante su operación autorizada.
     public function estado(CondicionHuespedRequest $solicitud, Huesped $huesped): RedirectResponse
     {
         $this->huespedes->cambiarCondicion($solicitud, $huesped, 'activo', $solicitud->boolean('valor'));
@@ -117,6 +139,8 @@ class HuespedController extends Controller
         return $this->volver($solicitud, $huesped);
     }
 
+    // Solicita cambiar la marca de lista negra mediante el permiso específico, conservando la ficha y
+    // sus relaciones.
     public function listaNegra(CondicionHuespedRequest $solicitud, Huesped $huesped): RedirectResponse
     {
         $this->huespedes->cambiarCondicion($solicitud, $huesped, 'lista_negra', $solicitud->boolean('valor'));
@@ -124,6 +148,7 @@ class HuespedController extends Controller
         return $this->volver($solicitud, $huesped);
     }
 
+    // Solicita cambiar la marca de cliente frecuente con autorización y auditoría.
     public function frecuente(CondicionHuespedRequest $solicitud, Huesped $huesped): RedirectResponse
     {
         $this->huespedes->cambiarCondicion($solicitud, $huesped, 'frecuente', $solicitud->boolean('valor'));
@@ -131,6 +156,8 @@ class HuespedController extends Controller
         return $this->volver($solicitud, $huesped);
     }
 
+    // Delega la eliminación de Huesped al servicio, donde se verifican permisos y restricciones antes
+    // de modificar los datos.
     public function eliminar(Request $solicitud, Huesped $huesped): RedirectResponse
     {
         $this->huespedes->eliminar($solicitud, $huesped);
@@ -138,6 +165,7 @@ class HuespedController extends Controller
         return $this->volver($solicitud);
     }
 
+    // Solicita restaurar Huesped mediante el servicio y devuelve confirmación al destino permitido.
     public function restaurar(Request $solicitud, Huesped $huesped): RedirectResponse
     {
         $this->huespedes->restaurar($solicitud, $huesped);
@@ -145,6 +173,8 @@ class HuespedController extends Controller
         return $this->volver($solicitud, $huesped);
     }
 
+    // Selecciona un destino que el usuario pueda consultar y agrega un mensaje de confirmación a la
+    // siguiente respuesta.
     private function volver(Request $solicitud, ?Huesped $huesped = null): RedirectResponse
     {
         $destino = $solicitud->user()->can('huespedes.ver')

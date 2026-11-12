@@ -1,8 +1,11 @@
+{{-- calendario: Presentación de editar fuente. --}}
 @extends('layouts.administracion')
 @section('titulo', 'Editar fuente de calendario')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <h1 class="h3">Editar fuente · {{ $fuente->nombre }}</h1>
 <p class="alert alert-info">La fuente conservará su cabaña y proveedor. Al guardar se suspenden las consultas hasta una nueva previsualización; los bloqueos existentes se conservan.</p>
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form class="card card-body" method="POST" action="{{ route('calendario.fuentes.actualizar', $fuente) }}">
 @csrf @method('PUT')
 <label class="form-label" for="nombre">Nombre</label><input class="form-control mb-3" name="nombre" id="nombre" value="{{ old('nombre', $fuente->nombre) }}" maxlength="100" required>

@@ -1,5 +1,8 @@
 <?php
 
+// Transportes y remitente de correo. La configuración permite al framework preparar envíos, pero no
+// constituye un flujo propio de recuperación de contraseña.
+
 return [
 
     /*

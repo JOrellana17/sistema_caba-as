@@ -1,5 +1,7 @@
+/* Carga Bootstrap desde las dependencias locales para compilarlo con Vite. */
 @import 'bootstrap/dist/css/bootstrap.min.css';
 
+/* Paleta y tipografía compartidas; las variables mantienen consistencia entre Bootstrap y los estilos propios. */
 :root {
     --cec-bosque: #15372e;
     --cec-verde: #1c493e;
@@ -28,6 +30,7 @@
     font-weight: 700;
 }
 
+/* Centra la pantalla de inicio de sesión y adapta su altura al área visible. */
 .acceso-contenedor {
     min-height: 100dvh;
     display: flex;
@@ -35,6 +38,7 @@
     justify-content: center;
 }
 
+/* Define el emblema gráfico reutilizable del establecimiento. */
 .marca-cabana {
     display: block;
     width: 2.625rem;
@@ -52,6 +56,7 @@
     max-width: 100%;
 }
 
+/* Organiza la marca y el formulario de acceso; las consultas de tamaño adaptan sus columnas. */
 .acceso-diseno {
     display: grid;
     min-height: 100dvh;
@@ -95,6 +100,7 @@
     min-height: 2.75rem;
 }
 
+/* Mantiene accesible la navegación superior en pantallas pequeñas. */
 .cabecera-movil {
     position: sticky;
     top: 0;
@@ -138,6 +144,7 @@
     background: #294c41;
 }
 
+/* Personaliza el menú lateral y su presentación desplegable con Bootstrap. */
 .barra-lateral {
     --bs-offcanvas-width: min(17.75rem, 88vw);
     --bs-offcanvas-color: var(--cec-texto-inverso);
@@ -159,6 +166,7 @@
     padding: 0;
 }
 
+/* Distribuye y permite desplazar los grupos de navegación. */
 .menu-modulos {
     flex: 1;
     min-height: 0;
@@ -178,6 +186,7 @@
     font-weight: 600;
 }
 
+/* Estilo de las opciones y sus estados de interacción y página actual. */
 .menu-enlace {
     position: relative;
     display: block;
@@ -204,6 +213,7 @@
     content: "";
 }
 
+/* Separa los datos de cuenta y el cierre de sesión del resto del menú. */
 .menu-cuenta {
     padding: 1rem 1.25rem;
     border-top: 1px solid #38554a;
@@ -224,6 +234,7 @@
     color: #fff;
 }
 
+/* Limita el ancho y proporciona espacio al contenido de las pantallas. */
 .aplicacion-contenido {
     width: 100%;
     min-width: 0;
@@ -232,6 +243,7 @@
     padding: 1.5rem 1rem 3rem;
 }
 
+/* Ajustes para pantallas medianas y mayores: aplica las reglas internas solo desde este ancho. */
 @media (min-width: 768px) {
     .acceso-diseno {
         grid-template: 1fr / 45.5% minmax(0, 1fr);
@@ -256,6 +268,7 @@
     }
 }
 
+/* En escritorio fija la distribución con barra lateral y área principal. */
 @media (min-width: 992px) {
     .aplicacion-marco {
         display: grid;
@@ -280,6 +293,7 @@
     }
 }
 
+/* Adapta los estados del botón principal a la paleta del proyecto. */
 .btn-primary {
     --bs-btn-bg: var(--cec-verde);
     --bs-btn-border-color: var(--cec-verde);
@@ -292,6 +306,7 @@
     --bs-btn-focus-shadow-rgb: 28, 73, 62;
 }
 
+/* Variante de botón con contorno para acciones secundarias. */
 .btn-outline-primary {
     --bs-btn-color: var(--cec-verde);
     --bs-btn-border-color: #829b8e;
@@ -304,10 +319,12 @@
     --bs-btn-focus-shadow-rgb: 28, 73, 62;
 }
 
+/* Unifica el fondo de tarjetas, listas, formularios y tablas. */
 .card { --bs-card-bg: var(--cec-superficie); }
 .list-group { --bs-list-group-bg: var(--cec-superficie); }
 .form-control, .form-select { background-color: var(--cec-superficie); }
 .table { --bs-table-bg: var(--cec-superficie); }
+/* Personaliza la navegación paginada. */
 .pagination {
     --bs-pagination-color: var(--cec-verde);
     --bs-pagination-bg: var(--cec-superficie);
@@ -316,6 +333,7 @@
     --bs-pagination-active-bg: var(--cec-verde);
     --bs-pagination-active-border-color: var(--cec-verde);
 }
+/* Mantiene los paneles desplegables dentro del mismo tema visual. */
 .accordion {
     --bs-accordion-bg: var(--cec-superficie);
     --bs-accordion-active-bg: #e1e8de;
@@ -323,6 +341,7 @@
     --bs-accordion-btn-focus-box-shadow: 0 0 0 .2rem rgb(28 73 62 / 15%);
 }
 
+/* Resalta los campos enfocados sin perder la referencia visual del tema. */
 .form-control:focus,
 .form-select:focus {
     border-color: #688d7c;
@@ -334,11 +353,13 @@
     border-color: var(--cec-verde);
 }
 
+/* Hace visible el foco de navegación por teclado. */
 :focus-visible {
     outline: 3px solid var(--cec-ocre);
     outline-offset: 3px;
 }
 
+/* Muestra el acceso directo al contenido cuando recibe foco. */
 .salto-contenido:focus {
     position: absolute;
     z-index: 1100;
@@ -346,8 +367,10 @@
     padding: 1rem;
 }
 
+/* Usa una columna en móvil; la regla posterior amplía el calendario a siete columnas. */
 .calendario-mes { display: grid; grid-template-columns: minmax(0, 1fr); gap: .5rem; }
 .calendario-dia { min-width: 0; }
+/* Ajustes para pantallas medianas y mayores: aplica las reglas internas solo desde este ancho. */
 @media (min-width: 768px) {
     .calendario-mes { grid-template-columns: repeat(7, minmax(0, 1fr)); }
     .calendario-dia { min-height: 10rem; }

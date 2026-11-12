@@ -1,3 +1,4 @@
+{{-- components: Presentación de mensajes. --}}
 @if (session('estado'))
     <div class="alert alert-success" role="status">{{ session('estado') }}</div>
 @endif

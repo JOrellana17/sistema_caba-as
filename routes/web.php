@@ -1,5 +1,7 @@
 <?php
 
+// Rutas HTTP con autenticación y permisos explícitos por operación.
+
 use App\Http\Controllers\AseoController;
 use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\AutenticacionController;
@@ -21,19 +23,24 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Middleware\RegistrarSesionUsuario;
 use Illuminate\Support\Facades\Route;
 
+// Portada pública; no concede acceso a operaciones administrativas.
 Route::get('/', function () {
     return view('welcome');
 })->name('portada');
 
+// Exportación por enlace secreto limitado: el controlador verifica vigencia y expone únicamente disponibilidad.
 Route::get('/icalendario/{token}.ics', [EnlaceCalendarioController::class, 'feed'])
     ->where('token', '[a-f0-9]{64}')->middleware('throttle:120,1')->name('calendario.feed');
 
+// Acceso de visitantes: formulario y envío de credenciales a la autenticación.
 Route::middleware('guest')->group(function () {
     Route::get('/iniciar-sesion', [AutenticacionController::class, 'mostrar'])->name('sesion.mostrar');
     Route::post('/iniciar-sesion', [AutenticacionController::class, 'iniciar'])->name('sesion.iniciar');
 });
 
+// Protege el área interna con autenticación, cuenta activa y seguimiento e invalidación de sesiones.
 Route::middleware(['auth', 'usuario.activo', RegistrarSesionUsuario::class, 'auth.session'])->group(function () {
+    // Operaciones personales: el controlador toma la cuenta autenticada, no un ID enviado por el cliente.
     Route::get('/mi-perfil', [PerfilController::class, 'ver'])->name('perfil.ver');
     Route::put('/mi-perfil/credenciales', [PerfilController::class, 'cambiar'])->middleware('throttle:5,1')->name('perfil.credenciales');
     Route::post('/credenciales/generar', [CredencialesController::class, 'generar'])->middleware('throttle:30,1')->name('credenciales.generar');
@@ -42,6 +49,7 @@ Route::middleware(['auth', 'usuario.activo', RegistrarSesionUsuario::class, 'aut
     Route::put('/usuarios/{usuario}/pin', [UsuarioController::class, 'pin'])->middleware(['can:usuarios.restablecer_pin', 'throttle:5,1'])->name('usuarios.pin');
     Route::get('/aseo', [AseoController::class, 'listar'])->middleware('can:aseo.ver')->name('aseo.listar');
     Route::put('/aseo/{aseo}/confirmar', [AseoController::class, 'confirmar'])->middleware(['can:aseo.ver', 'can:aseo.confirmar'])->name('aseo.confirmar');
+    // Agenda, fuentes y bloqueos: cada operación sensible conserva su permiso explícito.
     Route::get('/calendario', [CalendarioController::class, 'ver'])->middleware('can:reservaciones.ver_calendario')->name('calendario.ver');
     Route::get('/calendario/fuentes', [FuenteCalendarioController::class, 'listar'])->name('calendario.fuentes');
     Route::post('/calendario/fuentes', [FuenteCalendarioController::class, 'guardar'])->middleware('can:calendario.administrar_fuentes')->name('calendario.fuentes.guardar');
@@ -58,6 +66,7 @@ Route::middleware(['auth', 'usuario.activo', RegistrarSesionUsuario::class, 'aut
     Route::post('/calendario/enlaces', [EnlaceCalendarioController::class, 'guardar'])->middleware('can:calendario.gestionar_enlaces')->name('calendario.enlaces.guardar');
     Route::post('/calendario/enlaces/{enlace}/revocar', [EnlaceCalendarioController::class, 'revocar'])->middleware('can:calendario.gestionar_enlaces')->name('calendario.enlaces.revocar');
     Route::get('/calendario/descargar', [EnlaceCalendarioController::class, 'descargar'])->middleware('can:calendario.exportar')->name('calendario.descargar');
+    // Consulta de disponibilidad y gestión del ciclo de reservaciones mediante sus controladores.
     Route::get('/reservaciones/disponibilidad', [DisponibilidadController::class, 'consultar'])->middleware('can:reservaciones.ver_disponibilidad')->name('reservaciones.disponibilidad');
     Route::get('/reservaciones', [ReservacionController::class, 'listar'])->middleware('can:reservaciones.ver')->name('reservaciones.listar');
     Route::get('/reservaciones/crear', [ReservacionController::class, 'crear'])->middleware('can:reservaciones.crear')->name('reservaciones.crear');
@@ -126,5 +135,6 @@ Route::middleware(['auth', 'usuario.activo', RegistrarSesionUsuario::class, 'aut
     Route::get('/auditoria', [AuditoriaController::class, 'listar'])->middleware('can:auditoria.ver')->name('auditoria.listar');
     Route::get('/auditoria/{registro}', [AuditoriaController::class, 'ver'])->middleware('can:auditoria.ver')->name('auditoria.ver');
     Route::get('/inicio', [InicioController::class, 'ver'])->name('inicio');
+    // El cierre requiere POST y protección CSRF para evitar cierres inducidos desde enlaces externos.
     Route::post('/cerrar-sesion', [AutenticacionController::class, 'cerrar'])->name('sesion.cerrar');
 });

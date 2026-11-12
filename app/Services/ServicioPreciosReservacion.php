@@ -1,5 +1,8 @@
 <?php
 
+// Servicio de precios reservacion. Centraliza las operaciones descritas en sus métodos para que los
+// controladores reutilicen las mismas reglas.
+
 namespace App\Services;
 
 use App\Models\Cabana;
@@ -10,6 +13,8 @@ use Illuminate\Validation\ValidationException;
 
 class ServicioPreciosReservacion
 {
+    // Calcula noches, personas adicionales y subtotal con aritmética decimal exacta. Conserva la
+    // tarifa histórica o toma la actual según la selección; HNL y USD no se convierten entre sí.
     public function calcular(Cabana $cabana, array $datos, ?Reservacion $anterior = null): array
     {
         $moneda = $datos['moneda'];

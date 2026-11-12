@@ -1,5 +1,8 @@
 <?php
 
+// Comando Artisan: Solicita credenciales por consola y crea una cuenta sin roles ni permisos; los
+// privilegios se asignan posteriormente.
+
 namespace App\Console\Commands;
 
 use App\Models\RegistroAuditoria;
@@ -15,6 +18,8 @@ class CrearUsuario extends Command
 
     protected $description = 'Crea una cuenta de personal sin asignar roles ni permisos';
 
+    // Solicita credenciales por consola y crea una cuenta sin roles ni permisos; los privilegios se
+    // asignan posteriormente.
     public function handle(): int
     {
         $datos = [
@@ -53,6 +58,7 @@ class CrearUsuario extends Command
             return self::FAILURE;
         }
 
+        // Las escrituras de este bloque se confirman juntas; una excepción revierte sus cambios en la base de datos.
         DB::transaction(function () use ($datos) {
             $usuario = Usuario::create(collect($datos)->except('contrasena_confirmation')->all());
             RegistroAuditoria::create([

@@ -1,15 +1,21 @@
+{{-- huespedes: Listado con filtros, acciones autorizadas y navegación entre resultados. --}}
 @extends('layouts.administracion')
 @section('titulo', 'Huéspedes')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center mb-4">
     <h1 class="h3 mb-0">Huéspedes{{ $eliminados ? ' eliminados' : '' }}</h1>
     <div class="d-flex flex-wrap gap-2">
+        {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
         @can('huespedes.crear')<a class="btn btn-primary" href="{{ route('huespedes.crear') }}">Nuevo huésped</a>@endcan
+        {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
         @can('huespedes.restaurar')<a class="btn btn-outline-secondary" href="{{ route('huespedes.listar', $eliminados ? [] : ['eliminados' => 1]) }}">{{ $eliminados ? 'Ver catálogo' : 'Ver eliminados' }}</a>@endcan
     </div>
 </div>
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form method="GET" action="{{ route('huespedes.listar') }}" class="card card-body mb-4">
     @if ($eliminados)<input type="hidden" name="eliminados" value="1">@endif
+    {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
     @can('huespedes.buscar')
         <x-campo nombre="buscar" etiqueta="Nombre, teléfono o identidad (al menos tres letras o números)" :valor="$filtros['buscar'] ?? ''" maxlength="120" />
     @endcan
@@ -28,16 +34,19 @@
     </div>
 </form>
 <div class="card"><div class="table-responsive">
+    {{-- Organiza los datos en columnas para comparar registros y localizar sus acciones. --}}
     <table class="table align-middle mb-0">
         <caption class="px-3">Fichas de huéspedes. Los registros inactivos o en lista negra requieren atención al seleccionarlos.</caption>
         <thead><tr><th scope="col">Nombre</th><th scope="col">Teléfono</th><th scope="col">Identidad</th><th scope="col">Condición</th><th scope="col">Acciones</th></tr></thead>
         <tbody>
+        {{-- Renderiza los registros y ofrece un estado vacío cuando no existen coincidencias. --}}
         @forelse ($huespedes as $huesped)
             <tr>
                 <td>{{ $huesped->nombre }}</td><td>{{ $huesped->telefono ?? 'Sin registrar' }}</td><td>{{ $huesped->numero_identidad ?? 'Sin registrar' }}</td>
                 <td><x-condicion-huesped :huesped="$huesped" /></td>
                 <td><div class="d-flex flex-wrap gap-2">
                     @if ($eliminados)
+                        {{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
                         <form method="POST" action="{{ route('huespedes.restaurar', $huesped) }}" data-confirmar="¿Restaurar esta ficha con sus condiciones anteriores?">
                             @csrf <button class="btn btn-sm btn-outline-primary" type="submit">Restaurar<span class="visually-hidden"> {{ $huesped->nombre }}</span></button>
                         </form>

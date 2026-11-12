@@ -1,5 +1,7 @@
 <?php
 
+// Proveedor que integra permisos y convenciones de interfaz con el arranque de Laravel.
+
 namespace App\Providers;
 
 use App\Models\Usuario;
@@ -10,6 +12,7 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
+    // Punto de registro de servicios del contenedor; actualmente no agrega enlaces personalizados.
     /**
      * Register any application services.
      */
@@ -18,6 +21,8 @@ class AppServiceProvider extends ServiceProvider
         //
     }
 
+    // Configura el programador local, la paginación Bootstrap y un Gate por cada permiso explícito del
+    // catálogo; la decisión final se delega al usuario.
     /**
      * Bootstrap any application services.
      */

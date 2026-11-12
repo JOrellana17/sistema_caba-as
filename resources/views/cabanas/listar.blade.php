@@ -1,5 +1,7 @@
+{{-- cabanas: Listado con filtros, acciones autorizadas y navegación entre resultados. --}}
 @extends('layouts.administracion')
 @section('titulo', 'Cabañas')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
@@ -7,12 +9,15 @@
         <p class="text-body-secondary mb-0">Unidades de alojamiento, capacidades y tarifas.</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
+        {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
         @can('cabanas.crear')<a class="btn btn-primary" href="{{ route('cabanas.crear') }}">Nueva cabaña</a>@endcan
+        {{-- Muestra esta acción solo si el usuario tiene autorización; el servidor vuelve a comprobarla al recibir la petición. --}}
         @can('cabanas.restaurar')
             <a class="btn btn-outline-secondary" href="{{ route('cabanas.listar', $eliminadas ? [] : ['eliminadas' => 1]) }}">{{ $eliminadas ? 'Ver catálogo' : 'Ver eliminadas' }}</a>
         @endcan
     </div>
 </div>
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form method="GET" action="{{ route('cabanas.listar') }}" class="card card-body mb-4">
     @if ($eliminadas)<input type="hidden" name="eliminadas" value="1">@endif
     <div class="row g-3 align-items-end">
@@ -42,10 +47,12 @@
 </form>
 <div class="card">
     <div class="table-responsive">
+        {{-- Organiza los datos en columnas para comparar registros y localizar sus acciones. --}}
         <table class="table align-middle mb-0">
             <caption class="px-3">El estado operativo no confirma disponibilidad para unas fechas.</caption>
             <thead><tr><th scope="col">Nombre</th><th scope="col">Capacidad base / máxima</th><th scope="col">Precio base (HNL)</th><th scope="col">Estado</th><th scope="col">Activa</th><th scope="col">Acciones</th></tr></thead>
             <tbody>
+            {{-- Renderiza los registros y ofrece un estado vacío cuando no existen coincidencias. --}}
             @forelse ($cabanas as $cabana)
                 <tr>
                     <td><p class="mb-2">{{ $cabana->nombre }}</p><x-equipamiento-cabana :cabana="$cabana" /></td>
@@ -56,7 +63,9 @@
                     <td>
                         <div class="d-flex flex-wrap gap-2">
                             @if ($eliminadas)
+                                    {{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
                                     <form method="POST" action="{{ route('cabanas.restaurar', $cabana) }}" data-confirmar="¿Restaurar esta cabaña con sus datos y estado anteriores?">
+                                        {{-- Incluye el token de sesión que protege la petición contra envíos desde otros sitios. --}}
                                         @csrf
                                         <button class="btn btn-sm btn-outline-primary" type="submit">Restaurar<span class="visually-hidden"> {{ $cabana->nombre }}</span></button>
                                     </form>

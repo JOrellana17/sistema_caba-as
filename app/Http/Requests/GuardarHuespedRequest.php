@@ -1,5 +1,8 @@
 <?php
 
+// Validación de entrada HTTP. Valida datos de contacto e identidad normalizada única, incluyendo
+// fichas eliminadas. Prohíbe modificar condiciones y columnas técnicas por este formulario.
+
 namespace App\Http\Requests;
 
 use App\Models\Huesped;
@@ -8,6 +11,8 @@ use Closure;
 
 class GuardarHuespedRequest extends SolicitudAdministrativa
 {
+    // Valida datos de contacto e identidad normalizada única, incluyendo fichas eliminadas. Prohíbe
+    // modificar condiciones y columnas técnicas por este formulario.
     public function rules(): array
     {
         return [
@@ -44,11 +49,15 @@ class GuardarHuespedRequest extends SolicitudAdministrativa
         ];
     }
 
+    // Asocia nombres técnicos de campos con etiquetas en español para que los mensajes del validador
+    // sean comprensibles.
     public function attributes(): array
     {
         return ['telefono' => 'teléfono', 'numero_identidad' => 'número de identidad', 'notas_incidentes' => 'notas de incidentes', 'vip' => 'VIP'];
     }
 
+    // Define mensajes legibles en español para los errores de validación; las claves corresponden a
+    // campos o reglas de Laravel.
     public function messages(): array
     {
         return array_merge(parent::messages(), [

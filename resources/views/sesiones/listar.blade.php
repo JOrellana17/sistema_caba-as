@@ -1,8 +1,11 @@
+{{-- sesiones: Listado con filtros, acciones autorizadas y navegación entre resultados. --}}
 @extends('layouts.administracion')
 @section('titulo', $todas ? 'Historial de sesiones' : 'Mis sesiones')
+{{-- Contenido específico de la pantalla insertado en la plantilla compartida. --}}
 @section('contenido')
 <h1 class="h2 mb-3">{{ $todas ? 'Historial de sesiones' : 'Mis sesiones' }}</h1>
 <p class="text-body-secondary">El vencimiento se calcula por inactividad. Cerrar el navegador no equivale a cerrar sesión. Los registros «observada» comienzan en la primera actividad registrada, no necesariamente en el inicio original.</p>
+{{-- Envía los datos a la ruta indicada; los campos y reglas se revalidan en el servidor. --}}
 <form method="GET" class="row g-3 align-items-end mb-4">
 @if ($todas)<div class="col-md-3"><label for="f-usuario" class="form-label">Usuario exacto</label><input id="f-usuario" class="form-control" name="usuario" value="{{ request('usuario') }}" maxlength="100"></div>@endif
 <div class="col-md-3"><label for="f-estado" class="form-label">Estado</label><select id="f-estado" name="estado" class="form-select"><option value="">Todos</option>@foreach (['activa', 'cerrada', 'vencida', 'revocada'] as $estado)<option value="{{ $estado }}" @selected(request('estado') === $estado)>{{ ucfirst($estado) }}</option>@endforeach</select></div>
@@ -13,6 +16,7 @@
 <div class="card"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr>
 @if ($todas)<th>Usuario</th>@endif<th>Inicio / origen</th><th>Última actividad</th><th>Finalización / vencimiento</th><th>Estado</th><th>Dispositivo</th>
 </tr></thead><tbody>
+{{-- Renderiza los registros y ofrece un estado vacío cuando no existen coincidencias. --}}
 @forelse ($sesiones as $sesion)<tr>
 @if ($todas)<td>{{ $sesion->usuario?->usuario }}</td>@endif
 <td>{{ $sesion->iniciada_en->format('d/m/Y H:i:s') }}<br><small>{{ $sesion->origen }}</small></td>

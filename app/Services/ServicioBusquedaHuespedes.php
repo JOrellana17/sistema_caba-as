@@ -1,5 +1,8 @@
 <?php
 
+// Servicio de busqueda huespedes. Centraliza las operaciones descritas en sus métodos para que los
+// controladores reutilicen las mismas reglas.
+
 namespace App\Services;
 
 use App\Models\Huesped;
@@ -8,6 +11,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ServicioBusquedaHuespedes
 {
+    // Añade coincidencias parciales por nombre, teléfono o identidad normalizados; exige tres
+    // caracteres útiles y prioriza coincidencias exactas de teléfono o identidad.
     public function filtrar(Builder $consulta, string $termino): Builder
     {
         $nombre = NormalizadorHuesped::nombre($termino);
@@ -26,6 +31,8 @@ class ServicioBusquedaHuespedes
             ->orderBy('nombre_busqueda')->orderBy('id');
     }
 
+    // Ejecuta la consulta limitada a 21 filas para devolver como máximo 20 y señalar si hay más.
+    // Selecciona la identidad únicamente cuando está autorizada.
     public function buscar(string $termino, bool $mostrarIdentidad): array
     {
         if (NormalizadorHuesped::caracteresUtiles($termino) < 3) {
@@ -44,6 +51,8 @@ class ServicioBusquedaHuespedes
         ];
     }
 
+    // Construye los datos públicos de una coincidencia y sus advertencias; excluye notas privadas y
+    // oculta la identidad cuando corresponde.
     public function resumir(Huesped $huesped, bool $mostrarIdentidad): array
     {
         return [

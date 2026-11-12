@@ -1,6 +1,8 @@
 #!/usr/bin/env php
 <?php
 
+// Punto de entrada de consola: carga Laravel y ejecuta el comando solicitado desde la terminal.
+
 use Illuminate\Foundation\Application;
 use Symfony\Component\Console\Input\ArgvInput;
 
